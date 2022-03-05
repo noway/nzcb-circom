@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const { assert } = require("chai");
 const { wasm: wasm_tester } = require("circom_tester");
 const { verifyPassURIOffline, DID_DOCUMENTS } = require("@vaxxnz/nzcp");
-const { bufferToBitArray, bitArrayToBuffer, bufferToBytes, bufferToChunks, chunksToBytes } = require("./helpers/utils");
+const { bufferToBitArray, bitArrayToBuffer, bufferToBytes, bufferToChunks, chunksToBits, fitBytes } = require("./helpers/utils");
 const { getToBeSignedAndRs } = require('./helpers/nzcp');
 const { encodeUint, stringToArray, padArray } = require('./helpers/cbor');
 
@@ -38,11 +38,16 @@ async function testNZCPCredSubjHash(cir, passURI, isLive, maxLen) {
     const input = { toBeSigned: bufferToBitArray(data.bytes), toBeSignedLen: data.bytesLen }
     const witness = await cir.calculateWitness(input, true);
 
-    const credSubjHash = Buffer.from(chunksToBytes(witness.slice(1, 3))).toString("hex");
-    assert.equal(credSubjHash, expected.credSubjHash);
+    const credSubjHashChunks = witness.slice(1, 3)
+    const credSubjHash = fitBytes(bitArrayToBuffer(chunksToBits(credSubjHashChunks, 248)), 32)
+    const credSubjHashHex = Buffer.from(credSubjHash).toString("hex");
 
-    const toBeSignedHash = Buffer.from(chunksToBytes(witness.slice(3, 5))).toString("hex");
-    assert.equal(toBeSignedHash, expected.toBeSignedHash);
+    const toBeSignedHashChunks = witness.slice(3, 5)
+    const toBeSignedHash = fitBytes(bitArrayToBuffer(chunksToBits(toBeSignedHashChunks, 248)), 32)
+    const toBeSignedHashHex = Buffer.from(toBeSignedHash).toString("hex");
+
+    assert.equal(credSubjHashHex, expected.credSubjHash);
+    assert.equal(toBeSignedHashHex, expected.toBeSignedHash);
 
     const exp = witness[5];
     assert.equal(exp, expected.exp)
