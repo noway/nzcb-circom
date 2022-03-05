@@ -43,10 +43,24 @@ function bufferToChunks(bytes, chunkSize) {
     return chunks
 }
 
+function chunksToBytes(chunks, chunkSize) {
+    const bytes = new Uint8Array(chunks.length * chunkSize);
+    for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        for (let j = 0; j < chunkSize; j++) {
+            const byteIdx = i * chunkSize + j;
+            const byte = (chunk >> BigInt(8 * j)) & 255n;
+            bytes[byteIdx] = Number(byte);
+        }
+    }
+    return bytes
+}
+
 
 module.exports = {
     bufferToBitArray,
     bitArrayToBuffer,
     bufferToBytes,
     bufferToChunks,
+    chunksToBytes,
 }
