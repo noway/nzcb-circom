@@ -1,12 +1,18 @@
 .PHONY: circuits/nzcp.circom circuits/cbor.circom test clean
 
-all: node_modules circuits/nzcp.circom circuits/nzcp_exampleTest.wasm circuits/nzcp_liveTest.wasm
+all: node_modules circuits/nzcp.circom circuits/nzcp_example.wasm circuits/nzcp_live.wasm
 
 circuits/nzcp_exampleTest.wasm:
 	circom circuits/nzcp_exampleTest.circom --r1cs --wasm
 
 circuits/nzcp_liveTest.wasm:
 	circom circuits/nzcp_liveTest.circom --r1cs --wasm
+
+circuits/nzcp_example.wasm:
+	circom circuits/nzcp_example.circom --r1cs --wasm
+
+circuits/nzcp_live.wasm:
+	circom circuits/nzcp_live.circom --r1cs --wasm
 
 test: node_modules circuits/nzcp.circom
 	yarn exec mocha
