@@ -436,7 +436,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     var BLOCK_SIZE = 512;
     var CLAIMS_SKIP_EXAMPLE = 27;
     var CLAIMS_SKIP_LIVE = 30;
-    var CHUNK_LEN_BITS = 246;
+    var CHUNK_LEN_BITS = 248;
     var SHA256_LEN_CHUNKS = 2;
 
 
