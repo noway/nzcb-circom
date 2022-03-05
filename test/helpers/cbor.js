@@ -15,13 +15,14 @@ function encodeUint(val) {
         return [24, val];
     }
     else if (val > 0xFF && val <= 0xFFFF) {
-        return [25, val >> 8, val & 255];
+        return [25, val >> 8, val & 0xFF];
     }
     else if (val > 0xFFFF && val <= 0xFFFFFFFF) {
-        return [26, Number(BigInt(val) >> 24n), (val >> 16) & 255, (val >> 8) & 255, val & 255];
+        return [26, Number(BigInt(val) >> 24n), (val >> 16) & 0xFF, (val >> 8) & 0xFF, val & 0xFF];
     }
+    // TODO: too big
     else if (val > 0xFFFFFFFF && val <= 0xFFFFFFFFFFFFFFFFn) {
-        return [27, val >> 56, (val >> 48) & 255, (val >> 40) & 255, (val >> 32) & 255, (val >> 24) & 255, (val >> 16) & 255, (val >> 8) & 255, val & 255];
+        return [27, val >> 56, (val >> 48) & 0xFF, (val >> 40) & 0xFF, (val >> 32) & 0xFF, (val >> 24) & 0xFF, (val >> 16) & 0xFF, (val >> 8) & 0xFF, val & 0xFF];
     }
     else {
         throw new Error('Value too large');
