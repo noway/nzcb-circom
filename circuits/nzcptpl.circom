@@ -499,8 +499,8 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     // export the ToBeSigned sha256 hash
     component tbsSha256B2n[SHA256_LEN_CHUNKS];
     for (var k = 0; k < SHA256_LEN_CHUNKS; k++) {
+        tbsSha256B2n[k] = Bits2Num(CHUNK_LEN_BITS);
         for (var i = 0; i < CHUNK_LEN_BITS; i++) {
-            tbsSha256B2n[k].in[i] = Bits2Num(CHUNK_LEN_BITS);
             tbsSha256B2n[k].in[i] <== tbsSha256.out[i];
         }
         toBeSignedSha256[k] <== tbsSha256B2n[k].out;
@@ -606,8 +606,8 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     // export the sha256 hash of the concat string
     component sha256B2n[SHA256_LEN_CHUNKS];
     for (var k = 0; k < SHA256_LEN_CHUNKS; k++) {
+        sha256B2n[k] = Bits2Num(CHUNK_LEN_BITS);
         for (var i = 0; i < CHUNK_LEN_BITS; i++) {
-            sha256B2n[k].in[i] = Bits2Num(CHUNK_LEN_BITS);
             sha256B2n[k].in[i] <== sha256.out[i];
         }
         credSubjSha256[k] <== sha256B2n[k].out;
