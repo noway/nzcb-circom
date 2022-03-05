@@ -436,6 +436,8 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     var BLOCK_SIZE = 512;
     var CLAIMS_SKIP_EXAMPLE = 27;
     var CLAIMS_SKIP_LIVE = 30;
+    var CHUNK_LEN_BITS = 246;
+    var SHA256_LEN_CHUNKS = 2;
 
 
     // compile time parameters
@@ -463,8 +465,8 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     // i/o signals
     signal input toBeSigned[MaxToBeSignedBits]; // gets zero-outted beyond length
     signal input toBeSignedLen; // length of toBeSigned in bytes
-    signal output credSubjSha256[SHA256_LEN];
-    signal output toBeSignedSha256[SHA256_LEN];
+    signal output credSubjSha256[SHA256_LEN_CHUNKS];
+    signal output toBeSignedSha256[SHA256_LEN_CHUNKS];
     signal output exp;
 
 
@@ -495,8 +497,13 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     }
 
     // export the ToBeSigned sha256 hash
-    for (var i = 0; i < SHA256_LEN; i++) {
-        toBeSignedSha256[i] <== tbsSha256.out[i];
+    component tbsSha256B2n[SHA256_LEN_CHUNKS];
+    for (var k = 0; k < SHA256_LEN_CHUNKS; k++) {
+        for (var i = 0; i < CHUNK_LEN_BITS; i++) {
+            tbsSha256B2n[k].in[i] = Bits2Num(CHUNK_LEN_BITS);
+            tbsSha256B2n[k].in[i] <== tbsSha256.out[i];
+        }
+        toBeSignedSha256[k] <== tbsSha256B2n[k].out;
     }
 
 
@@ -597,8 +604,13 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     }
 
     // export the sha256 hash of the concat string
-    for (var i = 0; i < SHA256_LEN; i++) {
-        credSubjSha256[i] <== sha256.out[i];
+    component sha256B2n[SHA256_LEN_CHUNKS];
+    for (var k = 0; k < SHA256_LEN_CHUNKS; k++) {
+        for (var i = 0; i < CHUNK_LEN_BITS; i++) {
+            sha256B2n[k].in[i] = Bits2Num(CHUNK_LEN_BITS);
+            sha256B2n[k].in[i] <== sha256.out[i];
+        }
+        credSubjSha256[k] <== sha256B2n[k].out;
     }
 
 }
