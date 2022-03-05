@@ -40,24 +40,32 @@ function bufferToChunks(bytes, chunkSize) {
     return chunks
 }
 
-function chunksToBytes(chunks, chunkSize) {
-    const bytes = new Uint8Array(chunks.length * chunkSize);
+function chunksToBits(chunks, chunkSize) {
+    const bits = new Uint8Array(chunks.length * chunkSize);
     for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
         for (let j = 0; j < chunkSize; j++) {
-            const byteIdx = i * chunkSize + j;
-            const byte = (chunk >> BigInt(8 * j)) & 255n;
-            bytes[byteIdx] = Number(byte);
+            const bitIdx = i * chunkSize + j;
+            const byte = (chunk >> BigInt(j)) & 1n;
+            bits[bitIdx] = Number(byte);
         }
     }
-    return bytes
+    return bits
 }
 
+function fitBytes(input, maxLen) {
+    const bytes = new Uint8Array(maxLen);
+    for (let i = 0; i < input.length; i++) {
+        bytes[i] = input[i];
+    }
+    return bytes;
+}
 
 module.exports = {
     bufferToBitArray,
     bitArrayToBuffer,
     bufferToBytes,
     bufferToChunks,
-    chunksToBytes,
+    chunksToBits,
+    fitBytes,
 }
