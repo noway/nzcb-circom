@@ -28,9 +28,25 @@ function bufferToBytes(b) {
     return res;
 }
 
+function bufferToChunks(bytes, chunkSize) {
+    const len = Math.floor((bytes.length - 1) / chunkSize) + 1;
+    const chunks = new Array(len).fill().map(() => 0n);
+    console.log(chunks)
+
+    for (let i = 0; i < bytes.length; i++) {
+        const currentChunkIdx = Math.floor(i / chunkSize);
+        const chunkBitIdx = i % chunkSize;
+        const additive = BigInt(bytes[i]) << BigInt(8 * chunkBitIdx);
+        console.log('a[i]', bytes[i], 'additive',additive)
+        chunks[currentChunkIdx] = chunks[currentChunkIdx] | additive;
+    }
+    return chunks
+}
+
 
 module.exports = {
     bufferToBitArray,
     bitArrayToBuffer,
     bufferToBytes,
+    bufferToChunks,
 }
