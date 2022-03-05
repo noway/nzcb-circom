@@ -29,15 +29,12 @@ function bufferToBytes(b) {
 }
 
 function bufferToChunks(bytes, chunkSize) {
-    const len = Math.floor((bytes.length - 1) / chunkSize) + 1;
+    const len = Math.floor((bytes.length - 1) / chunkSize) + 1; // TODO: not sure about this
     const chunks = new Array(len).fill().map(() => 0n);
-    console.log(chunks)
-
     for (let i = 0; i < bytes.length; i++) {
         const currentChunkIdx = Math.floor(i / chunkSize);
-        const chunkBitIdx = i % chunkSize;
-        const additive = BigInt(bytes[i]) << BigInt(8 * chunkBitIdx);
-        console.log('a[i]', bytes[i], 'additive',additive)
+        const chunkByteIdx = i % chunkSize;
+        const additive = BigInt(bytes[i]) << BigInt(8 * chunkByteIdx);
         chunks[currentChunkIdx] = chunks[currentChunkIdx] | additive;
     }
     return chunks
