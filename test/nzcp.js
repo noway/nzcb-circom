@@ -30,7 +30,7 @@ function getNZCPPubIdentity(passURI, isLive) {
 }
 
 async function testNZCPCredSubjHash(cir, passURI, isLive, maxLen) {
-    const SHA256_BITS = 256;
+    const SHA256_BYTES = 32;
 
     const expected = getNZCPPubIdentity(passURI, isLive);
 
@@ -39,11 +39,11 @@ async function testNZCPCredSubjHash(cir, passURI, isLive, maxLen) {
     const witness = await cir.calculateWitness(input, true);
 
     const credSubjHashChunks = witness.slice(1, 3)
-    const credSubjHash = fitBytes(bitArrayToBuffer(chunksToBits(credSubjHashChunks, 248)), 32)
+    const credSubjHash = fitBytes(bitArrayToBuffer(chunksToBits(credSubjHashChunks, 248)), SHA256_BYTES)
     const credSubjHashHex = Buffer.from(credSubjHash).toString("hex");
 
     const toBeSignedHashChunks = witness.slice(3, 5)
-    const toBeSignedHash = fitBytes(bitArrayToBuffer(chunksToBits(toBeSignedHashChunks, 248)), 32)
+    const toBeSignedHash = fitBytes(bitArrayToBuffer(chunksToBits(toBeSignedHashChunks, 248)), SHA256_BYTES)
     const toBeSignedHashHex = Buffer.from(toBeSignedHash).toString("hex");
 
     assert.equal(credSubjHashHex, expected.credSubjHash);
