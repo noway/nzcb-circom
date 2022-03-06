@@ -2,6 +2,7 @@ node_modules/
 *.ptau
 *.zkey
 *.wtns
+*.r1cs
 circomlib.zip
 circomlib-master
 nzcp_js
@@ -14,3 +15,5 @@ nzcp_exampleTest_js
 nzcp_liveTest_js
 nzcp_exampleTest.r1cs
 nzcp_liveTest.r1cs
+nzcp_example_js
+nzcp_live_js
