@@ -438,9 +438,12 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     var CLAIMS_SKIP_LIVE = 30;
     var CHUNK_LEN_BITS = 248;
     var SHA256_LEN_CHUNKS = 2;
+    var OUT_CHUNKS = 3;
+    var EXP_LEN_BITS = 8 * 4;
 
 
     // compile time parameters
+    var DataLen = CHUNK_LEN_BITS * OUT_CHUNKS - SHA256_LEN * 2 - EXP_LEN_BITS;
     var ClaimsSkip = IsLive ? CLAIMS_SKIP_LIVE : CLAIMS_SKIP_EXAMPLE;
 
     // ToBeSigned hash
@@ -465,9 +468,8 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     // i/o signals
     signal input toBeSigned[MaxToBeSignedBits]; // gets zero-outted beyond length
     signal input toBeSignedLen; // length of toBeSigned in bytes
-    signal output credSubjSha256[SHA256_LEN_CHUNKS];
-    signal output toBeSignedSha256[SHA256_LEN_CHUNKS];
-    signal output exp;
+    signal input data[DataLen]; // extra pass-thru data for various purposes, fill with 0s of not needed
+    signal output out[OUT_CHUNKS];
 
 
     // check that input is only bits (0 or 1) (hardcore assert)
@@ -495,18 +497,6 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     for (var i = MaxToBeSignedBits; i < ToBeSignedMaxBits; i++) {
         tbsSha256.in[i] <== 0;
     }
-
-    // export the ToBeSigned sha256 hash
-    component tbsSha256B2n[SHA256_LEN_CHUNKS];
-    for (var k = 0; k < SHA256_LEN_CHUNKS; k++) {
-        tbsSha256B2n[k] = Bits2Num(CHUNK_LEN_BITS);
-        for (var i = 0; i < CHUNK_LEN_BITS; i++) {
-            var bitIndex = k * CHUNK_LEN_BITS + i;
-            tbsSha256B2n[k].in[i] <== bitIndex < SHA256_LEN ? tbsSha256.out[bitIndex] : 0;
-        }
-        toBeSignedSha256[k] <== tbsSha256B2n[k].out;
-    }
-
 
 
     // convert ToBeSigned bits to bytes
@@ -604,17 +594,44 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
         sha256.in[i] <== 0;
     }
 
-    // export the sha256 hash of the concat string
-    component sha256B2n[SHA256_LEN_CHUNKS];
-    for (var k = 0; k < SHA256_LEN_CHUNKS; k++) {
-        sha256B2n[k] = Bits2Num(CHUNK_LEN_BITS);
-        for (var i = 0; i < CHUNK_LEN_BITS; i++) {
-            var bitIndex = k * CHUNK_LEN_BITS + i;
-            sha256B2n[k].in[i] <== bitIndex < SHA256_LEN ? sha256.out[bitIndex] : 0;
-        }
-        credSubjSha256[k] <== sha256B2n[k].out;
+    // export
+    component n2bExp = Num2Bits(EXP_LEN_BITS);
+    n2bExp.in <== exp;
+
+    component b2n[3];
+    b2n[0] = Bits2Num(CHUNK_LEN_BITS);
+    b2n[1] = Bits2Num(CHUNK_LEN_BITS);
+    b2n[2] = Bits2Num(CHUNK_LEN_BITS);
+
+    // pack cred subj sha256
+    for(var k = 0; k < CHUNK_LEN_BITS; k++) {
+        b2n[0].in[k] <== sha256.out[k];
+    }
+    for(var k = 0; k < 8; k++) {
+        b2n[1].in[k] <== sha256.out[CHUNK_LEN_BITS + k];
     }
 
+    // pack ToBeSigned sha256
+    for(var k = 8; k < CHUNK_LEN_BITS; k++) {
+        b2n[1].in[k] <== tbsSha256B2n.out[k - 8];
+    }
+    for(var k = 0; k < 16; k++) {
+        b2n[2].in[k] <== tbsSha256B2n.out[CHUNK_LEN_BITS + k - 8];
+    }
+
+    // Pack exp
+    for(var k = 16; k < 16 + EXP_LEN_BITS; k++) {
+        b2n[2].in[k] <== n2bExp.out[k - 16];
+    }
+
+    // Pack the pass-thru data
+    for(var k = 16 + EXP_LEN_BITS; k < CHUNK_LEN_BITS; k++) {
+        b2n[2].in[k] <== data[k - (16 + EXP_LEN_BITS)];
+    }
+
+    out[0] <== b2n[0].out;
+    out[1] <== b2n[1].out;
+    out[2] <== b2n[2].out;
 }
 
 
