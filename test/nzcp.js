@@ -31,26 +31,40 @@ function getNZCPPubIdentity(passURI, isLive) {
 
 async function testNZCPCredSubjHash(cir, passURI, isLive, maxLen) {
     const SHA256_BYTES = 32;
+    const EXP_LEN_BITS = 8 * 4;
 
     const expected = getNZCPPubIdentity(passURI, isLive);
 
+    const passThruData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19]);
     const data = prepareToBeSigned(Buffer.from(getToBeSignedAndRs(passURI).ToBeSigned, "hex"), maxLen);
-    const input = { toBeSigned: bufferToBitArray(data.bytes), toBeSignedLen: data.bytesLen }
+    const input = { toBeSigned: bufferToBitArray(data.bytes), toBeSignedLen: data.bytesLen, data: bufferToBitArray(passThruData) }
     const witness = await cir.calculateWitness(input, true);
 
-    const credSubjHashChunks = witness.slice(1, 3)
-    const credSubjHash = fitBytes(bitArrayToBuffer(chunksToBits(credSubjHashChunks, 248)), SHA256_BYTES)
+    const out = witness.slice(1, 4);
+    const bits = chunksToBits(out, 248);
+
+    const credSubjHashBits = bits.slice(0, SHA256_BYTES * 8);
+    const toBeSignedHashBits = bits.slice(SHA256_BYTES * 8, 2 * SHA256_BYTES * 8);
+    const expBits = bits.slice(2 * SHA256_BYTES * 8, 2 * SHA256_BYTES * 8 + EXP_LEN_BITS);
+    const dataBits = bits.slice(2 * SHA256_BYTES * 8 + EXP_LEN_BITS);
+    
+    const credSubjHash = bitArrayToBuffer(credSubjHashBits)
     const credSubjHashHex = Buffer.from(credSubjHash).toString("hex");
 
-    const toBeSignedHashChunks = witness.slice(3, 5)
-    const toBeSignedHash = fitBytes(bitArrayToBuffer(chunksToBits(toBeSignedHashChunks, 248)), SHA256_BYTES)
+    const toBeSignedHash = bitArrayToBuffer(toBeSignedHashBits)
     const toBeSignedHashHex = Buffer.from(toBeSignedHash).toString("hex");
 
     assert.equal(credSubjHashHex, expected.credSubjHash);
     assert.equal(toBeSignedHashHex, expected.toBeSignedHash);
 
-    const exp = witness[5];
+    let exp = 0;
+    for(let i = 0; i < EXP_LEN_BITS; i++) {
+        exp |= expBits[i] << i;
+    }
     assert.equal(exp, expected.exp)
+
+    const actualPassThruData = bitArrayToBuffer(dataBits)
+    assert.equal(Buffer.from(actualPassThruData).toString("hex"), Buffer.from(passThruData).toString("hex"));
 }
 
 const EXAMPLE_PASS_URI = "NZCP:/1/2KCEVIQEIVVWK6JNGEASNICZAEP2KALYDZSGSZB2O5SWEOTOPJRXALTDN53GSZBRHEXGQZLBNR2GQLTOPICRUYMBTIFAIGTUKBAAUYTWMOSGQQDDN5XHIZLYOSBHQJTIOR2HA4Z2F4XXO53XFZ3TGLTPOJTS6MRQGE4C6Y3SMVSGK3TUNFQWY4ZPOYYXQKTIOR2HA4Z2F4XW46TDOAXGG33WNFSDCOJONBSWC3DUNAXG46RPMNXW45DFPB2HGL3WGFTXMZLSONUW63TFGEXDALRQMR2HS4DFQJ2FMZLSNFTGSYLCNRSUG4TFMRSW45DJMFWG6UDVMJWGSY2DN53GSZCQMFZXG4LDOJSWIZLOORUWC3CTOVRGUZLDOSRWSZ3JOZSW4TTBNVSWISTBMNVWUZTBNVUWY6KOMFWWKZ2TOBQXE4TPO5RWI33CNIYTSNRQFUYDILJRGYDVAYFE6VGU4MCDGK7DHLLYWHVPUS2YIDJOA6Y524TD3AZRM263WTY2BE4DPKIF27WKF3UDNNVSVWRDYIYVJ65IRJJJ6Z25M2DO4YZLBHWFQGVQR5ZLIWEQJOZTS3IQ7JTNCFDX";
