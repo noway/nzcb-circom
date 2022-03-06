@@ -530,6 +530,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     expPos <== findVC.expPos;
 
     // read exp field in the map
+    signal exp;
     component expReadType = ReadType(MaxToBeSignedBytes);
     copyBytes(ToBeSigned, expReadType.bytes, MaxToBeSignedBytes)
     expReadType.pos <== expPos;
@@ -598,40 +599,40 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     component n2bExp = Num2Bits(EXP_LEN_BITS);
     n2bExp.in <== exp;
 
-    component b2n[3];
-    b2n[0] = Bits2Num(CHUNK_LEN_BITS);
-    b2n[1] = Bits2Num(CHUNK_LEN_BITS);
-    b2n[2] = Bits2Num(CHUNK_LEN_BITS);
+    component outB2n[3];
+    outB2n[0] = Bits2Num(CHUNK_LEN_BITS);
+    outB2n[1] = Bits2Num(CHUNK_LEN_BITS);
+    outB2n[2] = Bits2Num(CHUNK_LEN_BITS);
 
     // pack cred subj sha256
     for(var k = 0; k < CHUNK_LEN_BITS; k++) {
-        b2n[0].in[k] <== sha256.out[k];
+        outB2n[0].in[k] <== sha256.out[k];
     }
     for(var k = 0; k < 8; k++) {
-        b2n[1].in[k] <== sha256.out[CHUNK_LEN_BITS + k];
+        outB2n[1].in[k] <== sha256.out[CHUNK_LEN_BITS + k];
     }
 
     // pack ToBeSigned sha256
     for(var k = 8; k < CHUNK_LEN_BITS; k++) {
-        b2n[1].in[k] <== tbsSha256B2n.out[k - 8];
+        outB2n[1].in[k] <== tbsSha256.out[k - 8];
     }
     for(var k = 0; k < 16; k++) {
-        b2n[2].in[k] <== tbsSha256B2n.out[CHUNK_LEN_BITS + k - 8];
+        outB2n[2].in[k] <== tbsSha256.out[CHUNK_LEN_BITS + k - 8];
     }
 
     // Pack exp
     for(var k = 16; k < 16 + EXP_LEN_BITS; k++) {
-        b2n[2].in[k] <== n2bExp.out[k - 16];
+        outB2n[2].in[k] <== n2bExp.out[k - 16];
     }
 
     // Pack the pass-thru data
     for(var k = 16 + EXP_LEN_BITS; k < CHUNK_LEN_BITS; k++) {
-        b2n[2].in[k] <== data[k - (16 + EXP_LEN_BITS)];
+        outB2n[2].in[k] <== data[k - (16 + EXP_LEN_BITS)];
     }
 
-    out[0] <== b2n[0].out;
-    out[1] <== b2n[1].out;
-    out[2] <== b2n[2].out;
+    out[0] <== outB2n[0].out;
+    out[1] <== outB2n[1].out;
+    out[2] <== outB2n[2].out;
 }
 
 
