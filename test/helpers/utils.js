@@ -49,10 +49,19 @@ function fitBytes(input, maxLen) {
     return bytes;
 }
 
+function bitArrayToNum(a) {
+    let num = 0;
+    for(let i = 0; i < a.length; i++) {
+        num |= a[i] << i;
+    }
+    return num
+}
+
 module.exports = {
     bufferToBitArray,
     bitArrayToBuffer,
     bufferToBytes,
     chunksToBits,
     fitBytes,
+    bitArrayToNum,
 }

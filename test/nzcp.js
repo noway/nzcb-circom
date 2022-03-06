@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const { assert } = require("chai");
 const { wasm: wasm_tester } = require("circom_tester");
 const { verifyPassURIOffline, DID_DOCUMENTS } = require("@vaxxnz/nzcp");
-const { bufferToBitArray, bitArrayToBuffer, bufferToBytes, bufferToChunks, chunksToBits, fitBytes } = require("./helpers/utils");
+const { bufferToBitArray, bitArrayToBuffer, bufferToBytes, bufferToChunks, chunksToBits, bitArrayToNum } = require("./helpers/utils");
 const { getToBeSignedAndRs } = require('./helpers/nzcp');
 const { encodeUint, stringToArray, padArray } = require('./helpers/cbor');
 
@@ -36,6 +36,7 @@ async function testNZCPCredSubjHash(cir, passURI, isLive, maxLen) {
     const expected = getNZCPPubIdentity(passURI, isLive);
 
     const passThruData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19]);
+    const passThruDataHex = Buffer.from(passThruData).toString("hex");
     const data = prepareToBeSigned(Buffer.from(getToBeSignedAndRs(passURI).ToBeSigned, "hex"), maxLen);
     const input = { toBeSigned: bufferToBitArray(data.bytes), toBeSignedLen: data.bytesLen, data: bufferToBitArray(passThruData) }
     const witness = await cir.calculateWitness(input, true);
@@ -57,14 +58,12 @@ async function testNZCPCredSubjHash(cir, passURI, isLive, maxLen) {
     assert.equal(credSubjHashHex, expected.credSubjHash);
     assert.equal(toBeSignedHashHex, expected.toBeSignedHash);
 
-    let exp = 0;
-    for(let i = 0; i < EXP_LEN_BITS; i++) {
-        exp |= expBits[i] << i;
-    }
+    const exp = bitArrayToNum(expBits);
     assert.equal(exp, expected.exp)
 
     const actualPassThruData = bitArrayToBuffer(dataBits)
-    assert.equal(Buffer.from(actualPassThruData).toString("hex"), Buffer.from(passThruData).toString("hex"));
+    const actualPassThruDataHex = Buffer.from(actualPassThruData).toString("hex");
+    assert.equal(actualPassThruDataHex, passThruDataHex);
 }
 
 const EXAMPLE_PASS_URI = "NZCP:/1/2KCEVIQEIVVWK6JNGEASNICZAEP2KALYDZSGSZB2O5SWEOTOPJRXALTDN53GSZBRHEXGQZLBNR2GQLTOPICRUYMBTIFAIGTUKBAAUYTWMOSGQQDDN5XHIZLYOSBHQJTIOR2HA4Z2F4XXO53XFZ3TGLTPOJTS6MRQGE4C6Y3SMVSGK3TUNFQWY4ZPOYYXQKTIOR2HA4Z2F4XW46TDOAXGG33WNFSDCOJONBSWC3DUNAXG46RPMNXW45DFPB2HGL3WGFTXMZLSONUW63TFGEXDALRQMR2HS4DFQJ2FMZLSNFTGSYLCNRSUG4TFMRSW45DJMFWG6UDVMJWGSY2DN53GSZCQMFZXG4LDOJSWIZLOORUWC3CTOVRGUZLDOSRWSZ3JOZSW4TTBNVSWISTBMNVWUZTBNVUWY6KOMFWWKZ2TOBQXE4TPO5RWI33CNIYTSNRQFUYDILJRGYDVAYFE6VGU4MCDGK7DHLLYWHVPUS2YIDJOA6Y524TD3AZRM263WTY2BE4DPKIF27WKF3UDNNVSVWRDYIYVJ65IRJJJ6Z25M2DO4YZLBHWFQGVQR5ZLIWEQJOZTS3IQ7JTNCFDX";
