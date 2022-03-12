@@ -25,14 +25,13 @@ function getNZCPPubIdentity(passURI, isLive) {
     return pubIdentity;
 }
 
-async function testNZCPCredSubjHash(cir, passURI, isLive, maxLen) {
+async function testNZCPPubIdentity(cir, passURI, isLive, maxLen) {
     const SHA256_BYTES = 32;
     const TIMESTAMP_BITS = 8 * 4;
 
     const expected = getNZCPPubIdentity(passURI, isLive);
 
     const passThruData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15]);
-    const passThruDataHex = Buffer.from(passThruData).toString("hex");
     const cose = getCOSE(passURI);
     const toBeSigned = encodeToBeSigned(cose.bodyProtected, cose.payload);
     const fittedToBeSigned = fitBytes(toBeSigned, maxLen);
@@ -64,8 +63,7 @@ async function testNZCPCredSubjHash(cir, passURI, isLive, maxLen) {
     assert.equal(exp, expected.exp)
 
     const actualPassThruData = bitArrayToBuffer(dataBits)
-    const actualPassThruDataHex = Buffer.from(actualPassThruData).toString("hex");
-    assert.equal(actualPassThruDataHex, passThruDataHex);
+    assert.deepEqual(actualPassThruData, passThruData);
 }
 
 const EXAMPLE_PASS_URI = "NZCP:/1/2KCEVIQEIVVWK6JNGEASNICZAEP2KALYDZSGSZB2O5SWEOTOPJRXALTDN53GSZBRHEXGQZLBNR2GQLTOPICRUYMBTIFAIGTUKBAAUYTWMOSGQQDDN5XHIZLYOSBHQJTIOR2HA4Z2F4XXO53XFZ3TGLTPOJTS6MRQGE4C6Y3SMVSGK3TUNFQWY4ZPOYYXQKTIOR2HA4Z2F4XW46TDOAXGG33WNFSDCOJONBSWC3DUNAXG46RPMNXW45DFPB2HGL3WGFTXMZLSONUW63TFGEXDALRQMR2HS4DFQJ2FMZLSNFTGSYLCNRSUG4TFMRSW45DJMFWG6UDVMJWGSY2DN53GSZCQMFZXG4LDOJSWIZLOORUWC3CTOVRGUZLDOSRWSZ3JOZSW4TTBNVSWISTBMNVWUZTBNVUWY6KOMFWWKZ2TOBQXE4TPO5RWI33CNIYTSNRQFUYDILJRGYDVAYFE6VGU4MCDGK7DHLLYWHVPUS2YIDJOA6Y524TD3AZRM263WTY2BE4DPKIF27WKF3UDNNVSVWRDYIYVJ65IRJJJ6Z25M2DO4YZLBHWFQGVQR5ZLIWEQJOZTS3IQ7JTNCFDX";
@@ -345,7 +343,7 @@ describe("NZCP public identity - example pass", function () {
     })
 
     it ("Should output pub identity for EXAMPLE_PASS_URI", async () => {
-        await testNZCPCredSubjHash(cir, EXAMPLE_PASS_URI, false, 314);
+        await testNZCPPubIdentity(cir, EXAMPLE_PASS_URI, false, 314);
     });
 });
 
@@ -359,21 +357,21 @@ describe("NZCP public identity - live pass", function () {
     })
 
     it ("Should output pub identity for LIVE_PASS_URI_1", async () => {
-        await testNZCPCredSubjHash(cir, LIVE_PASS_URI_1, true, 355);
+        await testNZCPPubIdentity(cir, LIVE_PASS_URI_1, true, 355);
     });
     if (LIVE_PASS_URI_2) {
         it ("Should output pub identity for LIVE_PASS_URI_2", async () => {
-            await testNZCPCredSubjHash(cir, LIVE_PASS_URI_2, true, 355);
+            await testNZCPPubIdentity(cir, LIVE_PASS_URI_2, true, 355);
         });
     }
     if (LIVE_PASS_URI_3) {
         it ("Should output pub identity for LIVE_PASS_URI_3", async () => {
-            await testNZCPCredSubjHash(cir, LIVE_PASS_URI_3, true, 355);
+            await testNZCPPubIdentity(cir, LIVE_PASS_URI_3, true, 355);
         });
     }
     if (LIVE_PASS_URI_4) {
         it ("Should output pub identity for LIVE_PASS_URI_4", async () => {
-            await testNZCPCredSubjHash(cir, LIVE_PASS_URI_4, true, 355);
+            await testNZCPPubIdentity(cir, LIVE_PASS_URI_4, true, 355);
         });
     }
 });
