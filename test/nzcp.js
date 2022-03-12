@@ -3,7 +3,7 @@ const { assert } = require("chai");
 const { wasm: wasm_tester } = require("circom_tester");
 const { verifyPassURIOffline, DID_DOCUMENTS } = require("@vaxxnz/nzcp");
 const { bufferToBitArray, bitArrayToBuffer, bufferToBytes, chunksToBits, bitArrayToNum, fitBytes } = require("./helpers/utils");
-const { getToBeSignedAndRs } = require('./helpers/nzcp');
+const { getCOSE, encodeToBeSigned } = require('./helpers/nzcp');
 const { encodeUint, stringToArray, padArray } = require('./helpers/cbor');
 
 require('dotenv').config()
@@ -13,7 +13,8 @@ function getNZCPPubIdentity(passURI, isLive) {
     const verificationResult = verifyPassURIOffline(passURI, { didDocument: isLive ? DID_DOCUMENTS.MOH_LIVE : DID_DOCUMENTS.MOH_EXAMPLE })
     const { givenName, familyName, dob } = verificationResult.credentialSubject;
     const credSubjConcat = `${givenName},${familyName},${dob}`
-    const toBeSigned = Buffer.from(getToBeSignedAndRs(passURI).ToBeSigned, "hex");
+    const cose = getCOSE(passURI);
+    const toBeSigned = encodeToBeSigned(cose.bodyProtected, cose.payload);
     const credSubjHash = crypto.createHash('sha256').update(credSubjConcat).digest('hex')
     const toBeSignedHash = crypto.createHash('sha256').update(toBeSigned).digest('hex')
     const nbf = verificationResult.raw.nbf
@@ -32,7 +33,8 @@ async function testNZCPCredSubjHash(cir, passURI, isLive, maxLen) {
 
     const passThruData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15]);
     const passThruDataHex = Buffer.from(passThruData).toString("hex");
-    const toBeSigned = Buffer.from(getToBeSignedAndRs(passURI).ToBeSigned, "hex")
+    const cose = getCOSE(passURI);
+    const toBeSigned = encodeToBeSigned(cose.bodyProtected, cose.payload);
     const fittedToBeSigned = fitBytes(toBeSigned, maxLen);
     const input = { toBeSigned: bufferToBitArray(fittedToBeSigned), toBeSignedLen: toBeSigned.length, data: bufferToBitArray(passThruData) }
     const witness = await cir.calculateWitness(input, true);
@@ -80,7 +82,8 @@ async function testFindCWTClaims(cir, passURI, isLive, pos, maxLen, expectedVCPo
     const nbf = verificationResult.raw.nbf
 
     const mapLen = 5;
-    const toBeSigned = Buffer.from(getToBeSignedAndRs(passURI).ToBeSigned, "hex")
+    const cose = getCOSE(passURI);
+    const toBeSigned = encodeToBeSigned(cose.bodyProtected, cose.payload);
     const fittedToBeSigned = fitBytes(toBeSigned, maxLen);
     const bytes = bufferToBytes(fittedToBeSigned)
     const witness = await cir.calculateWitness({ mapLen, bytes, pos }, true);
@@ -150,7 +153,8 @@ describe("NZCP find CWT claims - live pass", function () {
 async function testFindCredSubj(cir, passURI, pos, maxLen, expectedCredSubjPos) {
 
     const mapLen = 4;
-    const toBeSigned = Buffer.from(getToBeSignedAndRs(passURI).ToBeSigned, "hex");
+    const cose = getCOSE(passURI);
+    const toBeSigned = encodeToBeSigned(cose.bodyProtected, cose.payload);
     const fittedToBeSigned = fitBytes(toBeSigned, maxLen);
     const bytes = bufferToBytes(fittedToBeSigned)
     const witness = await cir.calculateWitness({ mapLen, bytes, pos }, true);
@@ -211,7 +215,8 @@ async function testReadCredSubj(cir, passURI, isLive, pos, maxLen, maxBufferLen)
     const { givenName, familyName, dob } = verificationResult.credentialSubject;
 
     const mapLen = 3;
-    const toBeSigned = Buffer.from(getToBeSignedAndRs(passURI).ToBeSigned, "hex");
+    const cose = getCOSE(passURI);
+    const toBeSigned = encodeToBeSigned(cose.bodyProtected, cose.payload);
     const fittedToBeSigned = fitBytes(toBeSigned, maxLen);
     const bytes = bufferToBytes(fittedToBeSigned)
     const witness = await cir.calculateWitness({ mapLen, bytes, pos }, true);
