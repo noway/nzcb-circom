@@ -22,8 +22,9 @@ function getNZCPPubIdentity(passURI, isLive) {
     const toBeSignedByteArray = Buffer.from(getToBeSignedAndRs(passURI).ToBeSigned, "hex");
     const credSubjHash = crypto.createHash('sha256').update(credSubjConcat).digest('hex')
     const toBeSignedHash = crypto.createHash('sha256').update(toBeSignedByteArray).digest('hex')
+    const nbf = verificationResult.raw.nbf
     const exp = verificationResult.raw.exp
-    const pubIdentity = { credSubjHash, toBeSignedHash, exp };
+    const pubIdentity = { credSubjHash, toBeSignedHash, nbf, exp };
     console.log('credSubjConcat', credSubjConcat);
     console.log('pubIdentity', pubIdentity);
     return pubIdentity;
@@ -31,11 +32,11 @@ function getNZCPPubIdentity(passURI, isLive) {
 
 async function testNZCPCredSubjHash(cir, passURI, isLive, maxLen) {
     const SHA256_BYTES = 32;
-    const EXP_LEN_BITS = 8 * 4;
+    const TIMESTAMP_BITS = 8 * 4;
 
     const expected = getNZCPPubIdentity(passURI, isLive);
 
-    const passThruData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19]);
+    const passThruData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15]);
     const passThruDataHex = Buffer.from(passThruData).toString("hex");
     const data = prepareToBeSigned(Buffer.from(getToBeSignedAndRs(passURI).ToBeSigned, "hex"), maxLen);
     const input = { toBeSigned: bufferToBitArray(data.bytes), toBeSignedLen: data.bytesLen, data: bufferToBitArray(passThruData) }
@@ -46,8 +47,9 @@ async function testNZCPCredSubjHash(cir, passURI, isLive, maxLen) {
 
     const credSubjHashBits = bits.slice(0, SHA256_BYTES * 8);
     const toBeSignedHashBits = bits.slice(SHA256_BYTES * 8, 2 * SHA256_BYTES * 8);
-    const expBits = bits.slice(2 * SHA256_BYTES * 8, 2 * SHA256_BYTES * 8 + EXP_LEN_BITS);
-    const dataBits = bits.slice(2 * SHA256_BYTES * 8 + EXP_LEN_BITS);
+    const nbfBits = bits.slice(2 * SHA256_BYTES * 8, 2 * SHA256_BYTES * 8 + TIMESTAMP_BITS);
+    const expBits = bits.slice(2 * SHA256_BYTES * 8 + TIMESTAMP_BITS, 2 * SHA256_BYTES * 8 + 2 * TIMESTAMP_BITS);
+    const dataBits = bits.slice(2 * SHA256_BYTES * 8 + 2 * TIMESTAMP_BITS);
     
     const credSubjHash = bitArrayToBuffer(credSubjHashBits)
     const credSubjHashHex = Buffer.from(credSubjHash).toString("hex");
@@ -57,6 +59,9 @@ async function testNZCPCredSubjHash(cir, passURI, isLive, maxLen) {
 
     assert.equal(credSubjHashHex, expected.credSubjHash);
     assert.equal(toBeSignedHashHex, expected.toBeSignedHash);
+
+    const nbf = bitArrayToNum(nbfBits);
+    assert.equal(nbf, expected.nbf)
 
     const exp = bitArrayToNum(expBits);
     assert.equal(exp, expected.exp)
@@ -336,7 +341,7 @@ describe("NZCP public identity - example pass", function () {
         cir = await wasm_tester(`${__dirname}/../circuits/nzcp_exampleTest.circom`);
     })
 
-    it ("Should parse ToBeSigned", async () => {
+    it ("Should output pub identity for EXAMPLE_PASS_URI", async () => {
         await testNZCPCredSubjHash(cir, EXAMPLE_PASS_URI, false, 314);
     });
 });
@@ -350,21 +355,21 @@ describe("NZCP public identity - live pass", function () {
         cir = await wasm_tester(`${__dirname}/../circuits/nzcp_liveTest.circom`);
     })
 
-    it ("Should generate credential hash and output exp for LIVE_PASS_URI_1", async () => {
+    it ("Should output pub identity for LIVE_PASS_URI_1", async () => {
         await testNZCPCredSubjHash(cir, LIVE_PASS_URI_1, true, 355);
     });
     if (LIVE_PASS_URI_2) {
-        it ("Should generate credential hash and output exp for LIVE_PASS_URI_2", async () => {
+        it ("Should output pub identity for LIVE_PASS_URI_2", async () => {
             await testNZCPCredSubjHash(cir, LIVE_PASS_URI_2, true, 355);
         });
     }
     if (LIVE_PASS_URI_3) {
-        it ("Should generate credential hash and output exp for LIVE_PASS_URI_3", async () => {
+        it ("Should output pub identity for LIVE_PASS_URI_3", async () => {
             await testNZCPCredSubjHash(cir, LIVE_PASS_URI_3, true, 355);
         });
     }
     if (LIVE_PASS_URI_4) {
-        it ("Should generate credential hash and output exp for LIVE_PASS_URI_4", async () => {
+        it ("Should output pub identity for LIVE_PASS_URI_4", async () => {
             await testNZCPCredSubjHash(cir, LIVE_PASS_URI_4, true, 355);
         });
     }
