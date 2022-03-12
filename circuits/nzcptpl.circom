@@ -40,6 +40,7 @@ template FindVCAndExp(BytesLen, MaxCborArrayLen, MaxCborMapLen) {
     signal input pos;
 
     signal output needlePos;
+    signal output nbfPos;
     signal output expPos;
 
     // signals
@@ -47,8 +48,10 @@ template FindVCAndExp(BytesLen, MaxCborArrayLen, MaxCborMapLen) {
     signal type[MaxCborMapLen];
     signal value[MaxCborMapLen];
     signal isNeedle[MaxCborMapLen];
+    signal isNbf[MaxCborMapLen];
     signal isExp[MaxCborMapLen];
     signal isAccepted[MaxCborMapLen];
+    signal isNbfAccepted[MaxCborMapLen];
     signal isExpAccepted[MaxCborMapLen];
 
     component readType[MaxCborMapLen];
@@ -58,10 +61,12 @@ template FindVCAndExp(BytesLen, MaxCborArrayLen, MaxCborMapLen) {
     component isString[MaxCborMapLen];
     component isInt[MaxCborMapLen];
     component isNeedleString[MaxCborMapLen];
+    component is5Int[MaxCborMapLen];
     component is4Int[MaxCborMapLen];
     component withinMapLen[MaxCborMapLen];
 
     component foundPosTally = CalculateTotal(MaxCborMapLen);
+    component nbfPosTally = CalculateTotal(MaxCborMapLen);
     component expPosTally = CalculateTotal(MaxCborMapLen);
 
     for (var k = 0; k < MaxCborMapLen; k++) { 
@@ -101,6 +106,11 @@ template FindVCAndExp(BytesLen, MaxCborArrayLen, MaxCborMapLen) {
         isNeedleString[k].pos <== decodeUint[k].nextPos; // pos before skipping
         isNeedleString[k].len <== value[k];
 
+        // is current value interpreted as an integer is a 1 number?
+        is5Int[k] = IsEqual();
+        is5Int[k].in[0] <== 5;
+        is5Int[k].in[1] <== value[k]; // pos before skipping
+
         // is current value interpreted as an integer is a 4 number?
         is4Int[k] = IsEqual();
         is4Int[k].in[0] <== 4;
@@ -114,23 +124,33 @@ template FindVCAndExp(BytesLen, MaxCborArrayLen, MaxCborMapLen) {
         // is current value a "vc" string?
         isNeedle[k] <== isString[k].out * isNeedleString[k].out;
 
+        // is current value a 1 int?
+        isNbf[k] <== isInt[k].out * is5Int[k].out;
+
         // is current value a 4 int?
         isExp[k] <== isInt[k].out * is4Int[k].out;
 
         // should we select this vc pos candidate?
         isAccepted[k] <== isNeedle[k] * withinMapLen[k].out;
 
+        // should we select this nbf candidate?
+        isNbfAccepted[k] <== isNbf[k] * withinMapLen[k].out;
+
         // should we select this exp candidate?
         isExpAccepted[k] <== isExp[k] * withinMapLen[k].out;
 
         // put a vc pos candidate into CalculateTotal to be able to get vc pos outside of the loop
         foundPosTally.nums[k] <== isAccepted[k] * (decodeUint[k].nextPos + value[k]);
+
+        // put a nbfPos candidate into CalculateTotal to be able to get nbf pos outside of the loop
+        nbfPosTally.nums[k] <== isNbfAccepted[k] * decodeUint[k].nextPos;
         
         // put a expPos candidate into CalculateTotal to be able to get exp pos outside of the loop
         expPosTally.nums[k] <== isExpAccepted[k] * decodeUint[k].nextPos;
     }
 
     needlePos <== foundPosTally.sum;
+    nbfPos <== nbfPosTally.sum;
     expPos <== expPosTally.sum;
 }
 
@@ -439,11 +459,11 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     var CHUNK_LEN_BITS = 248;
     var SHA256_LEN_CHUNKS = 2;
     var OUT_CHUNKS = 3;
-    var EXP_LEN_BITS = 8 * 4;
+    var TIMESTAMP_BITS = 8 * 4;
 
 
     // compile time parameters
-    var DataLen = CHUNK_LEN_BITS * OUT_CHUNKS - SHA256_LEN * 2 - EXP_LEN_BITS;
+    var DataLen = CHUNK_LEN_BITS * OUT_CHUNKS - SHA256_LEN * 2 - TIMESTAMP_BITS * 2;
     var ClaimsSkip = IsLive ? CLAIMS_SKIP_LIVE : CLAIMS_SKIP_EXAMPLE;
 
     // ToBeSigned hash
@@ -521,13 +541,26 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
 
     // find "vc" key pos in the map
     signal vcPos;
+    signal nbfPos;
     signal expPos;
     component findVC = FindVCAndExp(MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborMapLenVC);
     copyBytes(ToBeSigned, findVC.bytes, MaxToBeSignedBytes)
     findVC.pos <== readMapLengthClaims.nextPos;
     findVC.mapLen <== readMapLengthClaims.len;
     vcPos <== findVC.needlePos;
+    nbfPos <== findVC.nbfPos;
     expPos <== findVC.expPos;
+
+    // read nbf field in the map
+    signal nbf;
+    component nbfReadType = ReadType(MaxToBeSignedBytes);
+    copyBytes(ToBeSigned, nbfReadType.bytes, MaxToBeSignedBytes)
+    nbfReadType.pos <== nbfPos;
+    component nbfDecodeUint = DecodeUint(MaxToBeSignedBytes);
+    nbfDecodeUint.v <== nbfReadType.v;
+    copyBytes(ToBeSigned, nbfDecodeUint.bytes, MaxToBeSignedBytes)
+    nbfDecodeUint.pos <== nbfReadType.nextPos;
+    nbf <== nbfDecodeUint.value;
 
     // read exp field in the map
     signal exp;
@@ -596,7 +629,10 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     }
 
     // export
-    component n2bExp = Num2Bits(EXP_LEN_BITS);
+    component n2bNbf = Num2Bits(TIMESTAMP_BITS);
+    n2bNbf.in <== nbf;
+
+    component n2bExp = Num2Bits(TIMESTAMP_BITS);
     n2bExp.in <== exp;
 
     component outB2n[3];
@@ -620,14 +656,19 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
         outB2n[2].in[k] <== tbsSha256.out[CHUNK_LEN_BITS + k - 8];
     }
 
+    // Pack nbf
+    for(var k = 16; k < 16 + TIMESTAMP_BITS; k++) {
+        outB2n[2].in[k] <== n2bNbf.out[k - 16];
+    }
+
     // Pack exp
-    for(var k = 16; k < 16 + EXP_LEN_BITS; k++) {
-        outB2n[2].in[k] <== n2bExp.out[k - 16];
+    for(var k = 16 + TIMESTAMP_BITS; k < 16 + 2 * TIMESTAMP_BITS; k++) {
+        outB2n[2].in[k] <== n2bExp.out[k - 16 - TIMESTAMP_BITS];
     }
 
     // Pack the pass-thru data
-    for(var k = 16 + EXP_LEN_BITS; k < CHUNK_LEN_BITS; k++) {
-        outB2n[2].in[k] <== data[k - (16 + EXP_LEN_BITS)];
+    for(var k = 16 + 2 * TIMESTAMP_BITS; k < CHUNK_LEN_BITS; k++) {
+        outB2n[2].in[k] <== data[k - (16 + 2 * TIMESTAMP_BITS)];
     }
 
     out[0] <== outB2n[0].out;
