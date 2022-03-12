@@ -20,10 +20,6 @@ function encodeUint(val) {
     else if (val > 0xFFFF && val <= 0xFFFFFFFF) {
         return [26, Number(BigInt(val) >> 24n), (val >> 16) & 0xFF, (val >> 8) & 0xFF, val & 0xFF];
     }
-    // TODO: too big
-    else if (val > 0xFFFFFFFF && val <= 0xFFFFFFFFFFFFFFFFn) {
-        return [27, val >> 56, (val >> 48) & 0xFF, (val >> 40) & 0xFF, (val >> 32) & 0xFF, (val >> 24) & 0xFF, (val >> 16) & 0xFF, (val >> 8) & 0xFF, val & 0xFF];
-    }
     else {
         throw new Error('Value too large');
     }
