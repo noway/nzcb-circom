@@ -1,5 +1,5 @@
 const { assert } = require("chai");
-const { bitArrayToBuffer, chunksToBits, fitBytes } = require("./helpers/utils");
+const { bitArrayToBuffer, chunksToBits, fitBytes, toHexString } = require("./helpers/utils");
 
 describe("chunksToBytes function", function () {
     it ("chunksToBytes works", async () => {
@@ -16,7 +16,7 @@ describe("chunksToBytes function", function () {
         const credSubjHash = '5fb355822221720ea4ce6734e5a09e459d452574a19310c0cea7c141f43a3dab';
         const toBeSignedHash = '271ce33d671a2d3b816d788135f4343e14bc66802f8cd841faac939e8c11f3ee';
 
-        assert.equal(Buffer.from(fitBytes(bitArrayToBuffer(chunksToBits(credSubjHashChunks, 248)), 32)).toString("hex"), credSubjHash)
-        assert.equal(Buffer.from(fitBytes(bitArrayToBuffer(chunksToBits(toBeSignedHashChunks, 248)), 32)).toString("hex"), toBeSignedHash)
+        assert.equal(toHexString(fitBytes(bitArrayToBuffer(chunksToBits(credSubjHashChunks, 248)), 32)), credSubjHash)
+        assert.equal(toHexString(fitBytes(bitArrayToBuffer(chunksToBits(toBeSignedHashChunks, 248)), 32)), toBeSignedHash)
     });
 });
