@@ -11,7 +11,7 @@ function bufferToBitArray(b) {
 
 function bitArrayToBuffer(a) {
     const len = Math.floor((a.length - 1) / 8) + 1;
-    const b = new Buffer.alloc(len);
+    const b = new Uint8Array(len);
 
     for (let i = 0; i < a.length; i++) {
         const p = Math.floor(i / 8);
