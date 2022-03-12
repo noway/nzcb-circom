@@ -25,11 +25,11 @@ include "./cbor.circom";
 #define NOT(in) (1 + in - 2*in)
 
 
-// @dev find verifiable credential and expiry date positions
+// @dev find verifiable credential position, expiry date position and not before position
 // @param BytesLen - max bytes length of the cbor buffer
 // @param MaxCborArrayLen - maximum number of elements in the CBOR array
 // @param MaxCborMapLen - maximum number of elements in the CBOR map
-template FindVCAndExp(BytesLen, MaxCborArrayLen, MaxCborMapLen) {
+template FindCWTClaims(BytesLen, MaxCborArrayLen, MaxCborMapLen) {
     // constants
     var ConstBytesLen = 2;
     var ConstBytes[ConstBytesLen] = [118, 99];
@@ -543,7 +543,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     signal vcPos;
     signal nbfPos;
     signal expPos;
-    component findVC = FindVCAndExp(MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborMapLenVC);
+    component findVC = FindCWTClaims(MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborMapLenVC);
     copyBytes(ToBeSigned, findVC.bytes, MaxToBeSignedBytes)
     findVC.pos <== readMapLengthClaims.nextPos;
     findVC.mapLen <== readMapLengthClaims.len;

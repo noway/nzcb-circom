@@ -73,10 +73,11 @@ const LIVE_PASS_URI_2 = process.env.LIVE_PASS_URI_2;
 const LIVE_PASS_URI_3 = process.env.LIVE_PASS_URI_3;
 const LIVE_PASS_URI_4 = process.env.LIVE_PASS_URI_4;
 
-async function testFindVCAndExp(cir, passURI, isLive, pos, maxLen, expectedVCPos, expectedExpPos) {
+async function testFindCWTClaims(cir, passURI, isLive, pos, maxLen, expectedVCPos, expectedNbfPos, expectedExpPos) {
 
     const verificationResult = verifyPassURIOffline(passURI, { didDocument: isLive ? DID_DOCUMENTS.MOH_LIVE : DID_DOCUMENTS.MOH_EXAMPLE })
     const exp = verificationResult.raw.exp
+    const nbf = verificationResult.raw.nbf
 
     const mapLen = 5;
     const input = prepareToBeSigned(Buffer.from(getToBeSignedAndRs(passURI).ToBeSigned, "hex"), maxLen);
@@ -86,53 +87,60 @@ async function testFindVCAndExp(cir, passURI, isLive, pos, maxLen, expectedVCPos
     const actualVCPos = Number(witness[1]);
     assert.equal(actualVCPos, expectedVCPos);
 
-    const actualExpPos = Number(witness[2]);
+    const actualNbfPos = Number(witness[2]);
+    assert.equal(actualNbfPos, expectedNbfPos);
+
+    const actualExpPos = Number(witness[3]);
     assert.equal(actualExpPos, expectedExpPos);
+
+    // assert that expiry date is at the right position
+    const actualNbf = bufferToBytes(input.bytes.slice(actualNbfPos, actualNbfPos + 5));
+    assert.deepEqual(actualNbf, encodeUint(nbf));
 
     // assert that expiry date is at the right position
     const actualExp = bufferToBytes(input.bytes.slice(actualExpPos, actualExpPos + 5));
     assert.deepEqual(actualExp, encodeUint(exp));
 
 }
-describe("NZCP find vc and exp - example pass", function () {
+describe("NZCP find CWT claims - example pass", function () {
     this.timeout(100000);
 
     const maxLen = 314;
     let cir
     before(async () => {
-        cir = await wasm_tester(`${__dirname}/../circuits/findVCAndExp_exampleTest.circom`);
+        cir = await wasm_tester(`${__dirname}/../circuits/findCWTClaims_exampleTest.circom`);
     })
 
-    it ("Should find vc and exp of EXAMPLE_PASS_URI", async () => {
-        await testFindVCAndExp(cir, EXAMPLE_PASS_URI, false, 28, maxLen, 76, 68);
+    it ("Should find CWT claims of EXAMPLE_PASS_URI", async () => {
+        await testFindCWTClaims(cir, EXAMPLE_PASS_URI, false, 28, maxLen, 76, 62, 68);
     });
 });
 
-describe("NZCP find vc and exp - live pass", function () {
+describe("NZCP find CWT claims - live pass", function () {
     this.timeout(100000);
 
     const maxLen = 355;
     let cir
     before(async () => {
-        cir = await wasm_tester(`${__dirname}/../circuits/findVCAndExp_liveTest.circom`);
+        cir = await wasm_tester(`${__dirname}/../circuits/findCWTClaims_liveTest.circom`);
     })
 
-    it ("Should find vc and exp of LIVE_PASS_URI_1", async () => {
-        await testFindVCAndExp(cir, LIVE_PASS_URI_1, true, 31, maxLen, 80, 72);
+    it ("Should find CWT claims of LIVE_PASS_URI_1", async () => {
+        await testFindCWTClaims(cir, LIVE_PASS_URI_1, true, 31, maxLen, 80, 66, 72);
     });
     if (LIVE_PASS_URI_2) {
-        it ("Should find vc and exp of LIVE_PASS_URI_2", async () => {
-            await testFindVCAndExp(cir, LIVE_PASS_URI_2, true, 31, maxLen, 80, 72);
+        it ("Should find CWT claims of LIVE_PASS_URI_2", async () => {
+            await testFindCWTClaims(cir, LIVE_PASS_URI_2, true, 31, maxLen, 80, 66, 72);
         });
     }
     if (LIVE_PASS_URI_3) {
-        it ("Should find vc and exp of LIVE_PASS_URI_3", async () => {
-            await testFindVCAndExp(cir, LIVE_PASS_URI_3, true, 31, maxLen, 80, 72);
+        it ("Should find CWT claims of LIVE_PASS_URI_3", async () => {
+            await testFindCWTClaims(cir, LIVE_PASS_URI_3, true, 31, maxLen, 80, 66, 72);
         });
     }
     if (LIVE_PASS_URI_4) {
-        it ("Should find vc and exp of LIVE_PASS_URI_4", async () => {
-            await testFindVCAndExp(cir, LIVE_PASS_URI_4, true, 31, maxLen, 80, 72);
+        it ("Should find CWT claims of LIVE_PASS_URI_4", async () => {
+            await testFindCWTClaims(cir, LIVE_PASS_URI_4, true, 31, maxLen, 80, 66, 72);
         });
     }
 });
