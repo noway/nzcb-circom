@@ -618,15 +618,16 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
         }
     }
 
-    // calculate sha256 of the concat string
-    component sha256 = Sha256Var(CredSubjBlockSpace);
-    sha256.len <== concatCredSubj.resultLen * 8;
-    for (var i = 0; i < CredSubjMaxBufferLenBits; i++) {
-        sha256.in[i] <== bits[i];
+    // calculate pedersen hash of the concat string
+
+    var PEDERSEN_LENGTH = 512;
+    assert(CredSubjMaxBufferLenBits == PEDERSEN_LENGTH);
+    component pedersen = Pedersen(PEDERSEN_LENGTH);
+    for (var i = 0; i < PEDERSEN_LENGTH; i++) {
+        pedersen.in[i] <== bits[i];
     }
-    for (var i = CredSubjMaxBufferLenBits; i < CredSubjHashMaxBits; i++) {
-        sha256.in[i] <== 0;
-    }
+    nullifierPart1 <== pedersen.out[0];
+    nullifierPart2 <== pedersen.out[1] + secretKey;
 
     // export
     component n2bNbf = Num2Bits(TIMESTAMP_BITS);
