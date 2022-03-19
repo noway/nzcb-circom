@@ -1,6 +1,7 @@
 node_modules/
 *.ptau
 *.zkey
+verification_key.json
 *.wtns
 *.r1cs
 circomlib.zip
