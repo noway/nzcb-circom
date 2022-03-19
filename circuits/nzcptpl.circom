@@ -2,6 +2,7 @@ pragma circom 2.0.3;
 
 include "../sha256-var-circom-main/snark-jwt-verify/circomlib/circuits/gates.circom";
 include "../sha256-var-circom-main/snark-jwt-verify/circomlib/circuits/comparators.circom";
+include "../sha256-var-circom-main/snark-jwt-verify/circomlib/circuits/pedersen.circom";
 include "../sha256-var-circom-main/circuits/sha256Var.circom";
 include "./cbor.circom";
 
@@ -489,6 +490,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     // i/o signals
     signal input toBeSigned[MaxToBeSignedBits]; // gets zero-outted beyond length
     signal input toBeSignedLen; // length of toBeSigned in bytes
+    signal input secret; // secret to scramble the nullifier
     signal input data[DataLen]; // extra pass-thru data for various purposes, fill with 0s of not needed
     signal output out[OUT_SIGNALS];
 
@@ -621,14 +623,15 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
 
     // calculate pedersen hash of the concat string
 
+    signal nullifier[2];
     var PEDERSEN_LENGTH = 512;
     assert(CredSubjMaxBufferLenBits == PEDERSEN_LENGTH);
     component pedersen = Pedersen(PEDERSEN_LENGTH);
     for (var i = 0; i < PEDERSEN_LENGTH; i++) {
         pedersen.in[i] <== bits[i];
     }
-    nullifierPart1 <== pedersen.out[0];
-    nullifierPart2 <== pedersen.out[1] + secretKey;
+    nullifier[0] <== pedersen.out[0];
+    nullifier[1] <== pedersen.out[1] + secret;
 
     // export
     component n2bNbf = Num2Bits(TIMESTAMP_BITS);
@@ -664,8 +667,8 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
         outB2n[1].in[k] <== data[k - (8 + 2 * TIMESTAMP_BITS)];
     }
 
-    out[0] <== nullifierPart1;
-    out[1] <== nullifierPart2;
+    out[0] <== nullifier[0];
+    out[1] <== nullifier[1];
     out[2] <== outB2n[0].out;
     out[3] <== outB2n[1].out;
 }
