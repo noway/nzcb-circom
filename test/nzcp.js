@@ -40,7 +40,9 @@ async function testNZCPPubIdentity(cir, passURI, isLive, maxLen) {
     const witness = await cir.calculateWitness(input, true);
 
     const out = witness.slice(1, 5);
-    const nullifier = out.slice(0, 2);
+    const nullifierRange = out.slice(0, 2);
+    console.log('nullifierRange[0]',nullifierRange[0])
+    console.log('nullifierRange[1]',nullifierRange[1])
     const bits = chunksToBits(out.slice(2), 248);
 
     // const credSubjHashBits = bits.slice(0, SHA256_BYTES * 8);
