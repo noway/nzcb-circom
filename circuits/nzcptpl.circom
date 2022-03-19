@@ -477,15 +477,16 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
 
     assert(MaxToBeSignedBits <= ToBeSignedMaxBits); // compile time check
 
-    // Credential Subject hash
-    var CredSubjMaxBufferLen = pow(2, CredSubjMaxBufferSpace);
-    var CredSubjMaxBufferLenBits = CredSubjMaxBufferLen * 8;
+    // Credential Subject hash aka the nullifier
+    // Only 64 character latin strings are supported.
+    var NULLIFIFER_LEN = 64;
+    var NULLIFIFER_LEN_BITS = NULLIFIFER_LEN * 8;
 
     var CredSubjBlockSpace = 1;
     var CredSubjBlockCount = pow(2, CredSubjBlockSpace);
     var CredSubjHashMaxBits = BLOCK_SIZE * CredSubjBlockCount;
 
-    assert(CredSubjMaxBufferLenBits <= CredSubjHashMaxBits); // compile time check
+    assert(NULLIFIFER_LEN_BITS <= CredSubjHashMaxBits); // compile time check
 
     // i/o signals
     signal input toBeSigned[MaxToBeSignedBits]; // gets zero-outted beyond length
@@ -596,24 +597,24 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
 
 
     // read credential subject map
-    component readCredSubj = ReadCredSubj(MaxToBeSignedBytes, CredSubjMaxBufferLen);
+    component readCredSubj = ReadCredSubj(MaxToBeSignedBytes, NULLIFIFER_LEN);
     copyBytes(ToBeSigned, readCredSubj.bytes, MaxToBeSignedBytes)
     readCredSubj.pos <== readMapLengthCredSubj.nextPos;
     readCredSubj.mapLen <== readMapLengthCredSubj.len;
 
     // concat given name, family name and dob
-    component concatCredSubj = ConcatCredSubj(CredSubjMaxBufferLen);
+    component concatCredSubj = ConcatCredSubj(NULLIFIFER_LEN);
     concatCredSubj.givenNameLen <== readCredSubj.givenNameLen;
     concatCredSubj.familyNameLen <== readCredSubj.familyNameLen;
     concatCredSubj.dobLen <== readCredSubj.dobLen;
-    for (var i = 0; i < CredSubjMaxBufferLen; i++) { concatCredSubj.givenName[i] <== readCredSubj.givenName[i]; }
-    for (var i = 0; i < CredSubjMaxBufferLen; i++) { concatCredSubj.familyName[i] <== readCredSubj.familyName[i]; }
-    for (var i = 0; i < CredSubjMaxBufferLen; i++) { concatCredSubj.dob[i] <== readCredSubj.dob[i]; }
+    for (var i = 0; i < NULLIFIFER_LEN; i++) { concatCredSubj.givenName[i] <== readCredSubj.givenName[i]; }
+    for (var i = 0; i < NULLIFIFER_LEN; i++) { concatCredSubj.familyName[i] <== readCredSubj.familyName[i]; }
+    for (var i = 0; i < NULLIFIFER_LEN; i++) { concatCredSubj.dob[i] <== readCredSubj.dob[i]; }
     
     // convert concat string into bits
-    component n2b[CredSubjMaxBufferLen];
-    signal bits[CredSubjMaxBufferLenBits];
-    for(var k = 0; k < CredSubjMaxBufferLen; k++) {
+    component n2b[NULLIFIFER_LEN];
+    signal bits[NULLIFIFER_LEN_BITS];
+    for(var k = 0; k < NULLIFIFER_LEN; k++) {
         n2b[k] = Num2Bits(8);
         n2b[k].in <== concatCredSubj.result[k];
         for (var j = 0; j < 8; j++) {
@@ -621,17 +622,18 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
         }
     }
 
-    // calculate pedersen hash of the concat string
+    // calculate nullifier of the concat string using pedersen hash
+    // nullifier = Pedersen(`${givenName},${familyName},${dob}`)
+    // nullifierRange = nullifier + secret
+    // In the contract, we will be checking that nullifier is within (nullifierRange - 2^256, nullifierRange]
 
-    signal nullifier[2];
-    var PEDERSEN_LENGTH = 512;
-    assert(CredSubjMaxBufferLenBits == PEDERSEN_LENGTH);
-    component pedersen = Pedersen(PEDERSEN_LENGTH);
-    for (var i = 0; i < PEDERSEN_LENGTH; i++) {
-        pedersen.in[i] <== bits[i];
+    signal nullifierRange[2];
+    component nullifierPedersen = Pedersen(NULLIFIFER_LEN_BITS);
+    for (var i = 0; i < NULLIFIFER_LEN_BITS; i++) {
+        nullifierPedersen.in[i] <== bits[i];
     }
-    nullifier[0] <== pedersen.out[0];
-    nullifier[1] <== pedersen.out[1] + secret;
+    nullifierRange[0] <== nullifierPedersen.out[0];
+    nullifierRange[1] <== nullifierPedersen.out[1] + secret;
 
     // export
     component n2bNbf = Num2Bits(TIMESTAMP_BITS);
@@ -667,8 +669,8 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
         outB2n[1].in[k] <== data[k - (8 + 2 * TIMESTAMP_BITS)];
     }
 
-    out[0] <== nullifier[0];
-    out[1] <== nullifier[1];
+    out[0] <== nullifierRange[0];
+    out[1] <== nullifierRange[1];
     out[2] <== outB2n[0].out;
     out[3] <== outB2n[1].out;
 }
