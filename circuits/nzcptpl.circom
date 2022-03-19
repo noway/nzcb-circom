@@ -482,12 +482,6 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     var NULLIFIFER_LEN = 64;
     var NULLIFIFER_LEN_BITS = NULLIFIFER_LEN * 8;
 
-    var CredSubjBlockSpace = 1;
-    var CredSubjBlockCount = pow(2, CredSubjBlockSpace);
-    var CredSubjHashMaxBits = BLOCK_SIZE * CredSubjBlockCount;
-
-    assert(NULLIFIFER_LEN_BITS <= CredSubjHashMaxBits); // compile time check
-
     // i/o signals
     signal input toBeSigned[MaxToBeSignedBits]; // gets zero-outted beyond length
     signal input toBeSignedLen; // length of toBeSigned in bytes
