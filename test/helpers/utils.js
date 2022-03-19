@@ -1,4 +1,5 @@
 
+// TODO: rename to bytesToBitArray and similar
 function bufferToBitArray(b) {
     const res = [];
     for (let i = 0; i < b.length; i++) {
