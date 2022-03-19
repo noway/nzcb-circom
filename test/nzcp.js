@@ -31,29 +31,31 @@ async function testNZCPPubIdentity(cir, passURI, isLive, maxLen) {
 
     const expected = getNZCPPubIdentity(passURI, isLive);
 
-    const passThruData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15]);
+    const passThruData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16]);
     const cose = getCOSE(passURI);
     const toBeSigned = encodeToBeSigned(cose.bodyProtected, cose.payload);
     const fittedToBeSigned = fitBytes(toBeSigned, maxLen);
-    const input = { toBeSigned: bufferToBitArray(fittedToBeSigned), toBeSignedLen: toBeSigned.length, data: bufferToBitArray(passThruData) }
+    const secretIndex = 0n // hardcoded as zero for now
+    const input = { toBeSigned: bufferToBitArray(fittedToBeSigned), toBeSignedLen: toBeSigned.length, data: bufferToBitArray(passThruData), secretIndex }
     const witness = await cir.calculateWitness(input, true);
 
-    const out = witness.slice(1, 4);
-    const bits = chunksToBits(out, 248);
+    const out = witness.slice(1, 5);
+    const nullifier = out.slice(0, 2);
+    const bits = chunksToBits(out.slice(2), 248);
 
-    const credSubjHashBits = bits.slice(0, SHA256_BYTES * 8);
-    const toBeSignedHashBits = bits.slice(SHA256_BYTES * 8, 2 * SHA256_BYTES * 8);
-    const nbfBits = bits.slice(2 * SHA256_BYTES * 8, 2 * SHA256_BYTES * 8 + TIMESTAMP_BITS);
-    const expBits = bits.slice(2 * SHA256_BYTES * 8 + TIMESTAMP_BITS, 2 * SHA256_BYTES * 8 + 2 * TIMESTAMP_BITS);
-    const dataBits = bits.slice(2 * SHA256_BYTES * 8 + 2 * TIMESTAMP_BITS);
+    // const credSubjHashBits = bits.slice(0, SHA256_BYTES * 8);
+    const toBeSignedHashBits = bits.slice(0, SHA256_BYTES * 8);
+    const nbfBits = bits.slice(SHA256_BYTES * 8, SHA256_BYTES * 8 + TIMESTAMP_BITS);
+    const expBits = bits.slice(SHA256_BYTES * 8 + TIMESTAMP_BITS, SHA256_BYTES * 8 + 2 * TIMESTAMP_BITS);
+    const dataBits = bits.slice(SHA256_BYTES * 8 + 2 * TIMESTAMP_BITS);
     
-    const credSubjHash = bitArrayToBuffer(credSubjHashBits)
-    const credSubjHashHex = toHexString(credSubjHash);
+    // const credSubjHash = bitArrayToBuffer(credSubjHashBits)
+    // const credSubjHashHex = toHexString(credSubjHash);
 
     const toBeSignedHash = bitArrayToBuffer(toBeSignedHashBits)
     const toBeSignedHashHex = toHexString(toBeSignedHash);
 
-    assert.equal(credSubjHashHex, expected.credSubjHash);
+    // assert.equal(credSubjHashHex, expected.credSubjHash);
     assert.equal(toBeSignedHashHex, expected.toBeSignedHash);
 
     const nbf = bitArrayToNum(nbfBits);
