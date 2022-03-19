@@ -612,9 +612,6 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     for(var k = 0; k < NULLIFIFER_LEN; k++) {
         n2bNullifier[k] = Num2Bits(8);
         n2bNullifier[k].in <== concatCredSubj.result[k];
-        // for (var j = 0; j < 8; j++) {
-        //     nullifierBits[k*8 + (7 - j)] <== n2bNullifier[k].out[j];
-        // }
         for (var j = 0; j < 8; j++) {
             nullifierBits[k*8 + j] <== n2bNullifier[k].out[j];
         }
