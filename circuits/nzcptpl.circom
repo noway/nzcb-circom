@@ -486,7 +486,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     // i/o signals
     signal input toBeSigned[MaxToBeSignedBits]; // gets zero-outted beyond length
     signal input toBeSignedLen; // length of toBeSigned in bytes
-    signal input secret; // secret to scramble the nullifierHash
+    signal input secretIndex; // secretIndex in the nullifierRange where nullifierHash resides
     signal input data[DataLen]; // extra pass-thru data for various purposes, fill with 0s of not needed
     signal output out[OUT_SIGNALS];
 
@@ -607,29 +607,29 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     for (var i = 0; i < NULLIFIFER_LEN; i++) { concatCredSubj.dob[i] <== readCredSubj.dob[i]; }
     
     // convert concat string into bits
-    component n2b[NULLIFIFER_LEN];
-    signal bits[NULLIFIFER_LEN_BITS];
+    component n2bNullifier[NULLIFIFER_LEN];
+    signal nullifierBits[NULLIFIFER_LEN_BITS];
     for(var k = 0; k < NULLIFIFER_LEN; k++) {
-        n2b[k] = Num2Bits(8);
-        n2b[k].in <== concatCredSubj.result[k];
+        n2bNullifier[k] = Num2Bits(8);
+        n2bNullifier[k].in <== concatCredSubj.result[k];
         for (var j = 0; j < 8; j++) {
-            bits[k*8 + (7 - j)] <== n2b[k].out[j];
+            nullifierBits[k*8 + (7 - j)] <== n2bNullifier[k].out[j];
         }
     }
 
     // calculate nullifierHash of the nullifer using pedersen hash
     // nullifier = `${givenName},${familyName},${dob}`
     // nullifierHash = Pedersen(nullifier)
-    // nullifierRange = nullifierHash + secret
+    // nullifierRange = nullifierHash + secretIndex
     // In the contract, we will be checking that nullifierHash is within (nullifierRange - 2^256, nullifierRange]
 
     signal nullifierRange[2];
     component nullifierPedersen = Pedersen(NULLIFIFER_LEN_BITS);
     for (var i = 0; i < NULLIFIFER_LEN_BITS; i++) {
-        nullifierPedersen.in[i] <== bits[i];
+        nullifierPedersen.in[i] <== nullifierBits[i];
     }
     nullifierRange[0] <== nullifierPedersen.out[0];
-    nullifierRange[1] <== nullifierPedersen.out[1] + secret;
+    nullifierRange[1] <== nullifierPedersen.out[1] + secretIndex;
 
     // export
     component n2bNbf = Num2Bits(TIMESTAMP_BITS);
