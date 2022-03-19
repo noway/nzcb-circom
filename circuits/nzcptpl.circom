@@ -363,6 +363,7 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
 
 // @dev concat givenName, familyName and dob with comma as separator
 // @param MaxBufferLen - max length of the buffer
+// TODO: rename to construct nullifier
 template ConcatCredSubj(MaxBufferLen) {
     var COMMA_CHAR = 44;
     var ConcatSizeBits = log2(MaxBufferLen) + 1;
@@ -444,7 +445,7 @@ template ConcatCredSubj(MaxBufferLen) {
 }
 
 // @dev get NZCP public identity based on ToBeSigned
-// @dev only 64 bytes is used for nullifier (`${givenName},${familyName},${dob}`)
+// @dev only 64 bytes is used for nullifier `${givenName},${familyName},${dob}`
 // @param IsLive - are we to use live or example NZCP?
 // @param MaxToBeSignedBytes - maximum number of bytes in ToBeSigned
 // @param MaxCborArrayLenVC - maximum number of elements in the CBOR array for verifiable credential
