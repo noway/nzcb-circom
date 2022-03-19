@@ -444,13 +444,13 @@ template ConcatCredSubj(MaxBufferLen) {
 }
 
 // @dev get NZCP public identity based on ToBeSigned
+// @dev only 64 bytes is used for nullifier (`${givenName},${familyName},${dob}`)
 // @param IsLive - are we to use live or example NZCP?
 // @param MaxToBeSignedBytes - maximum number of bytes in ToBeSigned
 // @param MaxCborArrayLenVC - maximum number of elements in the CBOR array for verifiable credential
 // @param MaxCborMapLenVC - maximum number of elements in the CBOR map for verifiable credential
 // @param MaxCborArrayLenCredSubj - maximum number of elements in the CBOR array for credential subject
 // @param MaxCborMapLenCredSubj - maximum number of elements in the CBOR map for credential subject
-// @param CredSubjMaxBufferSpace - maximum number of bytes in the buffer for concat credential subject
 template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborMapLenVC, MaxCborArrayLenCredSubj, MaxCborMapLenCredSubj, CredSubjMaxBufferSpace) {
     // constants
     var SHA256_LEN = 256;
@@ -477,7 +477,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
 
     assert(MaxToBeSignedBits <= ToBeSignedMaxBits); // compile time check
 
-    // Credential Subject hash aka the nullifier
+    // concat string aka the nullifier
     // Only 64 character latin strings are supported.
     var NULLIFIFER_LEN = 64;
     var NULLIFIFER_LEN_BITS = NULLIFIFER_LEN * 8;
@@ -491,7 +491,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     // i/o signals
     signal input toBeSigned[MaxToBeSignedBits]; // gets zero-outted beyond length
     signal input toBeSignedLen; // length of toBeSigned in bytes
-    signal input secret; // secret to scramble the nullifier
+    signal input secret; // secret to scramble the nullifierHash
     signal input data[DataLen]; // extra pass-thru data for various purposes, fill with 0s of not needed
     signal output out[OUT_SIGNALS];
 
@@ -622,10 +622,11 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
         }
     }
 
-    // calculate nullifier of the concat string using pedersen hash
-    // nullifier = Pedersen(`${givenName},${familyName},${dob}`)
-    // nullifierRange = nullifier + secret
-    // In the contract, we will be checking that nullifier is within (nullifierRange - 2^256, nullifierRange]
+    // calculate nullifierHash of the nullifer using pedersen hash
+    // nullifier = `${givenName},${familyName},${dob}`
+    // nullifierHash = Pedersen(nullifier)
+    // nullifierRange = nullifierHash + secret
+    // In the contract, we will be checking that nullifierHash is within (nullifierRange - 2^256, nullifierRange]
 
     signal nullifierRange[2];
     component nullifierPedersen = Pedersen(NULLIFIFER_LEN_BITS);
