@@ -5,21 +5,30 @@ const { verifyPassURIOffline, DID_DOCUMENTS } = require("@vaxxnz/nzcp");
 const { bufferToBitArray, bitArrayToBuffer, bufferToBytes, chunksToBits, bitArrayToNum, fitBytes, toHexString } = require("./helpers/utils");
 const { getCOSE, encodeToBeSigned } = require('./helpers/nzcp');
 const { encodeUint, stringToArray, padArray } = require('./helpers/cbor');
+const buildPedersenHash = require("circomlibjs").buildPedersenHash;
+const buildBabyJub = require("circomlibjs").buildBabyjub;
 
 require('dotenv').config()
 
 
-function getNZCPPubIdentity(passURI, isLive) {
+async function getNZCPPubIdentity(passURI, secretIndex, isLive) {
     const verificationResult = verifyPassURIOffline(passURI, { didDocument: isLive ? DID_DOCUMENTS.MOH_LIVE : DID_DOCUMENTS.MOH_EXAMPLE })
     const { givenName, familyName, dob } = verificationResult.credentialSubject;
-    const credSubjConcat = `${givenName},${familyName},${dob}`
+    const credSubjConcat = `${givenName},${familyName},${dob}` // TODO: rename to nullifier
     const cose = getCOSE(passURI);
     const toBeSigned = encodeToBeSigned(cose.bodyProtected, cose.payload);
-    const credSubjHash = crypto.createHash('sha256').update(credSubjConcat).digest('hex')
+    const babyJub = await buildBabyJub();
+    const F = babyJub.F;
+    const pedersen = await buildPedersenHash();
+    const nullifier = fitBytes(new TextEncoder().encode(credSubjConcat), 64);
+    const h = pedersen.hash(nullifier);
+    const hP = babyJub.unpackPoint(h);
+    const nullifierHash = [F.toObject(hP[0]), F.toObject(hP[1])]
+    const nullififerRange = [nullifierHash[0], nullifierHash[1] + secretIndex]
     const toBeSignedHash = crypto.createHash('sha256').update(toBeSigned).digest('hex')
     const nbf = verificationResult.raw.nbf
     const exp = verificationResult.raw.exp
-    const pubIdentity = { credSubjHash, toBeSignedHash, nbf, exp };
+    const pubIdentity = { nullififerRange, toBeSignedHash, nbf, exp };
     console.log('credSubjConcat', credSubjConcat);
     console.log('pubIdentity', pubIdentity);
     return pubIdentity;
@@ -29,35 +38,32 @@ async function testNZCPPubIdentity(cir, passURI, isLive, maxLen) {
     const SHA256_BYTES = 32;
     const TIMESTAMP_BITS = 8 * 4;
 
-    const expected = getNZCPPubIdentity(passURI, isLive);
+    const secretIndex = 1n // hardcoded as 1 for now
+    const expected = await getNZCPPubIdentity(passURI, secretIndex, isLive);
 
     const passThruData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16]);
     const cose = getCOSE(passURI);
     const toBeSigned = encodeToBeSigned(cose.bodyProtected, cose.payload);
     const fittedToBeSigned = fitBytes(toBeSigned, maxLen);
-    const secretIndex = 0n // hardcoded as zero for now
     const input = { toBeSigned: bufferToBitArray(fittedToBeSigned), toBeSignedLen: toBeSigned.length, data: bufferToBitArray(passThruData), secretIndex }
     const witness = await cir.calculateWitness(input, true);
 
     const out = witness.slice(1, 5);
     const nullifierRange = out.slice(0, 2);
-    console.log('nullifierRange[0]',nullifierRange[0])
-    console.log('nullifierRange[1]',nullifierRange[1])
+
     const bits = chunksToBits(out.slice(2), 248);
 
-    // const credSubjHashBits = bits.slice(0, SHA256_BYTES * 8);
     const toBeSignedHashBits = bits.slice(0, SHA256_BYTES * 8);
     const nbfBits = bits.slice(SHA256_BYTES * 8, SHA256_BYTES * 8 + TIMESTAMP_BITS);
     const expBits = bits.slice(SHA256_BYTES * 8 + TIMESTAMP_BITS, SHA256_BYTES * 8 + 2 * TIMESTAMP_BITS);
     const dataBits = bits.slice(SHA256_BYTES * 8 + 2 * TIMESTAMP_BITS);
     
-    // const credSubjHash = bitArrayToBuffer(credSubjHashBits)
-    // const credSubjHashHex = toHexString(credSubjHash);
 
     const toBeSignedHash = bitArrayToBuffer(toBeSignedHashBits)
     const toBeSignedHashHex = toHexString(toBeSignedHash);
 
-    // assert.equal(credSubjHashHex, expected.credSubjHash);
+    assert.equal(nullifierRange[0], expected.nullififerRange[0]);
+    assert.equal(nullifierRange[1], expected.nullififerRange[1]);
     assert.equal(toBeSignedHashHex, expected.toBeSignedHash);
 
     const nbf = bitArrayToNum(nbfBits);
