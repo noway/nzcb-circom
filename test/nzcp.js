@@ -7,8 +7,25 @@ const { getCOSE, encodeToBeSigned } = require('./helpers/nzcp');
 const { encodeUint } = require('./helpers/cbor');
 const buildPedersenHash = require("circomlibjs").buildPedersenHash;
 const buildBabyJub = require("circomlibjs").buildBabyjub;
+const Scalar = require("ffjavascript").Scalar;
+const F1Field = require("ffjavascript").F1Field;
 
 require('dotenv').config()
+
+
+// get a well distributed random field element in the domain of Z/pZ
+// this might return not perfectly well distributed random values, but it's within 1 bit of being well-distributed
+function getRandomFieldElement() {
+    const p = Scalar.fromString("21888242871839275222246405745257275088548364400416034343698204186575808495617");
+    const Fr = new F1Field(p);
+    const randomBytes32 = crypto.randomBytes(32)
+    const randomBits = bufferToBitArray(randomBytes32);
+    // log2(p) is 253.596691355002 so we need at least 254 bits
+    const randomBits254 = randomBits.slice(0, 254);
+    const r = bitArrayToNum(randomBits254)
+    const s = Fr.e(r)
+    return s
+}
 
 
 async function getNZCPPubIdentity(passURI, secretIndex, isLive) {
@@ -38,7 +55,7 @@ async function testNZCPPubIdentity(cir, passURI, isLive, maxLen) {
     const SHA256_BYTES = 32;
     const TIMESTAMP_BITS = 8 * 4;
 
-    const secretIndex = 1n // hardcoded as 1 for now
+    const secretIndex = getRandomFieldElement();
     const expected = await getNZCPPubIdentity(passURI, secretIndex, isLive);
 
     const passThruData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16]);
