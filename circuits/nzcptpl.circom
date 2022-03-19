@@ -452,7 +452,7 @@ template ConcatCredSubj(MaxBufferLen) {
 // @param MaxCborMapLenVC - maximum number of elements in the CBOR map for verifiable credential
 // @param MaxCborArrayLenCredSubj - maximum number of elements in the CBOR array for credential subject
 // @param MaxCborMapLenCredSubj - maximum number of elements in the CBOR map for credential subject
-template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborMapLenVC, MaxCborArrayLenCredSubj, MaxCborMapLenCredSubj, CredSubjMaxBufferSpace) {
+template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborMapLenVC, MaxCborArrayLenCredSubj, MaxCborMapLenCredSubj) {
     // constants
     var SHA256_LEN = 256;
     var BLOCK_SIZE = 512;
