@@ -51,9 +51,9 @@ function fitBytes(input, maxLen) {
 }
 
 function bitArrayToNum(a) {
-    let num = 0;
+    let num = 0n;
     for(let i = 0; i < a.length; i++) {
-        num |= a[i] << i;
+        num |= BigInt(a[i]) << BigInt(i);
     }
     return num
 }
