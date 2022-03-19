@@ -483,10 +483,13 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     var NULLIFIFER_LEN = 64;
     var NULLIFIFER_LEN_BITS = NULLIFIFER_LEN * 8;
 
+    // we are only using 248 bits of each coordinate (~253.596691355002 bits each)
+    var NULLIFIFER_HASH_COORD_LEN_BITS = 248; // TODO: rename to NULLIFIFER_HASH_COORD_LEN
+
     // i/o signals
     signal input toBeSigned[MaxToBeSignedBits]; // gets zero-outted beyond length
     signal input toBeSignedLen; // length of toBeSigned in bytes
-    signal input secretIndex; // secretIndex in the nullifierRange where nullifierHash resides
+    signal input secretIndex[NULLIFIFER_HASH_COORD_LEN_BITS]; // secretIndex in the nullifierRange where nullifierHash resides. Provided as bits.
     signal input data[DataLen]; // extra pass-thru data for various purposes, fill with 0s of not needed
     signal output out[OUT_SIGNALS];
 
@@ -628,8 +631,43 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     for (var i = 0; i < NULLIFIFER_LEN_BITS; i++) {
         nullifierPedersen.in[i] <== nullifierBits[i];
     }
-    nullifierRange[0] <== nullifierPedersen.out[0];
-    nullifierRange[1] <== nullifierPedersen.out[1] + secretIndex;
+
+    // add secretIndex to nullifierHash to get nullifierRange
+
+    // jam x and y nullifier hash coordinates into one bit array
+    component n2bNullifierHash[2];
+    n2bNullifierHash[0] = Num2Bits(NULLIFIFER_HASH_COORD_LEN_BITS);
+    n2bNullifierHash[1] = Num2Bits(NULLIFIFER_HASH_COORD_LEN_BITS);
+    n2bNullifierHash[0].in <== nullifierPedersen.out[0];
+    n2bNullifierHash[1].in <== nullifierPedersen.out[1];
+    
+    // sum the bit nullifier hash bit array with secretIndex bit array
+    component bs = BinSum(NULLIFIFER_HASH_COORD_LEN_BITS * 2, 2);
+    for (var i = 0; i < NULLIFIFER_HASH_COORD_LEN_BITS; i++) {
+        bs.in[0][i] <== n2bNullifierHash[0].out[i];
+    }
+    for (var i = NULLIFIFER_HASH_COORD_LEN_BITS; i < NULLIFIFER_HASH_COORD_LEN_BITS * 2; i++) {
+        bs.in[0][i] <== n2bNullifierHash[1].out[i - NULLIFIFER_HASH_COORD_LEN_BITS];
+    }
+    for (var i = 0; i < NULLIFIFER_HASH_COORD_LEN_BITS; i++) {
+        bs.in[1][i] <== secretIndex[i];
+    }
+    for (var i = NULLIFIFER_HASH_COORD_LEN_BITS; i < NULLIFIFER_HASH_COORD_LEN_BITS * 2; i++) {
+        bs.in[1][i] <== 0;
+    }
+
+    // convert the bit array back into 2 signals
+    component b2nNullifierRange[2];
+    b2nNullifierRange[0] = Bits2Num(NULLIFIFER_HASH_COORD_LEN_BITS);
+    b2nNullifierRange[1] = Bits2Num(NULLIFIFER_HASH_COORD_LEN_BITS);
+    for (var i = 0; i < NULLIFIFER_HASH_COORD_LEN_BITS; i++) {
+        b2nNullifierRange[0].in[i] <== bs.out[i];
+    }
+    for (var i = NULLIFIFER_HASH_COORD_LEN_BITS; i < NULLIFIFER_HASH_COORD_LEN_BITS * 2; i++) {
+        b2nNullifierRange[1].in[i - NULLIFIFER_HASH_COORD_LEN_BITS] <== bs.out[i];
+    }
+    nullifierRange[0] <== b2nNullifierRange[0].out;
+    nullifierRange[1] <== b2nNullifierRange[1].out;
 
     // export
     component n2bNbf = Num2Bits(TIMESTAMP_BITS);
