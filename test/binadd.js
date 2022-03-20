@@ -45,4 +45,48 @@ describe("BinAdd", function () {
             }
         }
     });
+    it ("BinAdd(3) exhaustively", async () => {
+        for (var i = 0; i < 2; i++) {
+            for (var j = 0; j < 2; j++) {
+                for (var x = 0; x < 2; x++) {
+                    for (var y = 0; y < 2; y++) {
+                        for (var r = 0; r < 2; r++) {
+                            for (var s = 0; s < 2; s++) {
+                                const op1 = [i, x, r]
+                                const op2 = [j, y, s]
+                                const witness = await cir3.calculateWitness({ op1, op2 }, true);
+                                const out = witness.slice(1, 5);
+                                console.log(bitArrayToNum(out))
+                                assert.equal(bitArrayToNum(op1) + bitArrayToNum(op2), bitArrayToNum(out));            
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+    it ("BinAdd(4) exhaustively", async () => {
+        for (var i = 0; i < 2; i++) {
+            for (var j = 0; j < 2; j++) {
+                for (var x = 0; x < 2; x++) {
+                    for (var y = 0; y < 2; y++) {
+                        for (var r = 0; r < 2; r++) {
+                            for (var s = 0; s < 2; s++) {
+                                for (var k = 0; k < 2; k++) {
+                                    for (var l = 0; l < 2; l++) {
+                                        const op1 = [i, x, r, k]
+                                        const op2 = [j, y, s, l]
+                                        const witness = await cir4.calculateWitness({ op1, op2 }, true);
+                                        const out = witness.slice(1, 6);
+                                        console.log(bitArrayToNum(out))
+                                        assert.equal(bitArrayToNum(op1) + bitArrayToNum(op2), bitArrayToNum(out));            
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
 });
