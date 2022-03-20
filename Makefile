@@ -29,6 +29,18 @@ sha512.zip:
 
 sha512-master/: sha512.zip
 	unzip $<
+	cd $@/circuits/sha512 && sed -i '' -E 's/([^[:alnum:]_])(ShR)([^[:alnum:]_])/\1Sha512_\2\3/g' *.circom
+	cd $@/circuits/sha512 && sed -i '' -E 's/([^[:alnum:]_])(SigmaPlus)([^[:alnum:]_])/\1Sha512_\2\3/g' *.circom
+	cd $@/circuits/sha512 && sed -i '' -E 's/([^[:alnum:]_])(SmallSigma)([^[:alnum:]_])/\1Sha512_\2\3/g' *.circom
+	cd $@/circuits/sha512 && sed -i '' -E 's/([^[:alnum:]_])(BigSigma)([^[:alnum:]_])/\1Sha512_\2\3/g' *.circom
+	cd $@/circuits/sha512 && sed -i '' -E 's/([^[:alnum:]_])(RotR)([^[:alnum:]_])/\1Sha512_\2\3/g' *.circom
+	cd $@/circuits/sha512 && sed -i '' -E 's/([^[:alnum:]_])(Xor3)([^[:alnum:]_])/\1Sha512_\2\3/g' *.circom
+	cd $@/circuits/sha512 && sed -i '' -E 's/([^[:alnum:]_])(T2)([^[:alnum:]_])/\1Sha512_\2\3/g' *.circom
+	cd $@/circuits/sha512 && sed -i '' -E 's/([^[:alnum:]_])(Maj_t)([^[:alnum:]_])/\1Sha512_\2\3/g' *.circom
+	cd $@/circuits/sha512 && sed -i '' -E 's/([^[:alnum:]_])(T1)([^[:alnum:]_])/\1Sha512_\2\3/g' *.circom
+	cd $@/circuits/sha512 && sed -i '' -E 's/([^[:alnum:]_])(Ch_t)([^[:alnum:]_])/\1Sha512_\2\3/g' *.circom
+	cd $@/circuits/sha512 && sed -i '' -E 's/([^[:alnum:]_])(H)([^[:alnum:]_])/\1Sha512_\2\3/g' *.circom
+	cd $@/circuits/sha512 && sed -i '' -E 's/([^[:alnum:]_])(K)([^[:alnum:]_])/\1Sha512_\2\3/g' *.circom
 
 circuits/nzcp.circom: circuits/cbor.circom sha256-var-circom-main sha512-master
 	cpp -P circuits/nzcptpl.circom > $@
