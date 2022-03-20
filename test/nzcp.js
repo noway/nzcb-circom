@@ -42,7 +42,7 @@ async function testNZCPPubIdentity(cir, passURI, isLive, maxLen) {
     const SHA256_BITS = 256;
     const TIMESTAMP_BITS = 8 * 4;
 
-    const secretIndex = new Uint8Array(Array(32).fill(0x00));
+    const secretIndex = getRandomBytes32();
     const expected = await getNZCPPubIdentity(passURI, secretIndex, isLive);
 
     const passThruData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14]);
