@@ -43,8 +43,8 @@ template FindCWTClaims(BytesLen, MaxCborArrayLen, MaxCborMapLen) {
     signal input pos;
 
     signal output needlePos;
-    signal output nbfPos;
-    signal output expPos;
+    signal output nbf;
+    signal output exp;
 
     // signals
     signal v[MaxCborMapLen];
@@ -153,8 +153,26 @@ template FindCWTClaims(BytesLen, MaxCborArrayLen, MaxCborMapLen) {
     }
 
     needlePos <== foundPosTally.sum;
-    nbfPos <== nbfPosTally.sum;
-    expPos <== expPosTally.sum;
+
+    // read nbf field in the map
+    component nbfReadType = ReadType(BytesLen);
+    copyBytes(bytes, nbfReadType.bytes, BytesLen)
+    nbfReadType.pos <== nbfPosTally.sum;
+    component nbfDecodeUint = DecodeUint(BytesLen);
+    nbfDecodeUint.v <== nbfReadType.v;
+    copyBytes(bytes, nbfDecodeUint.bytes, BytesLen)
+    nbfDecodeUint.pos <== nbfReadType.nextPos;
+    nbf <== nbfDecodeUint.value;
+
+    // read exp field in the map
+    component expReadType = ReadType(BytesLen);
+    copyBytes(bytes, expReadType.bytes, BytesLen)
+    expReadType.pos <== expPosTally.sum;
+    component expDecodeUint = DecodeUint(BytesLen);
+    expDecodeUint.v <== expReadType.v;
+    copyBytes(bytes, expDecodeUint.bytes, BytesLen)
+    expDecodeUint.pos <== expReadType.nextPos;
+    exp <== expDecodeUint.value;
 }
 
 // @dev find credential subject position
@@ -543,37 +561,15 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
 
     // find "vc" key pos in the map
     signal vcPos;
-    signal nbfPos;
-    signal expPos;
+    signal nbf;
+    signal exp;
     component findVC = FindCWTClaims(MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborMapLenVC);
     copyBytes(ToBeSigned, findVC.bytes, MaxToBeSignedBytes)
     findVC.pos <== readMapLengthClaims.nextPos;
     findVC.mapLen <== readMapLengthClaims.len;
     vcPos <== findVC.needlePos;
-    nbfPos <== findVC.nbfPos;
-    expPos <== findVC.expPos;
-
-    // read nbf field in the map
-    signal nbf;
-    component nbfReadType = ReadType(MaxToBeSignedBytes);
-    copyBytes(ToBeSigned, nbfReadType.bytes, MaxToBeSignedBytes)
-    nbfReadType.pos <== nbfPos;
-    component nbfDecodeUint = DecodeUint(MaxToBeSignedBytes);
-    nbfDecodeUint.v <== nbfReadType.v;
-    copyBytes(ToBeSigned, nbfDecodeUint.bytes, MaxToBeSignedBytes)
-    nbfDecodeUint.pos <== nbfReadType.nextPos;
-    nbf <== nbfDecodeUint.value;
-
-    // read exp field in the map
-    signal exp;
-    component expReadType = ReadType(MaxToBeSignedBytes);
-    copyBytes(ToBeSigned, expReadType.bytes, MaxToBeSignedBytes)
-    expReadType.pos <== expPos;
-    component expDecodeUint = DecodeUint(MaxToBeSignedBytes);
-    expDecodeUint.v <== expReadType.v;
-    copyBytes(ToBeSigned, expDecodeUint.bytes, MaxToBeSignedBytes)
-    expDecodeUint.pos <== expReadType.nextPos;
-    exp <== expDecodeUint.value;
+    nbf <== findVC.nbf;
+    exp <== findVC.exp;
 
 
     // find credential subject
