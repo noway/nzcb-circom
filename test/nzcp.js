@@ -87,7 +87,7 @@ const LIVE_PASS_URI_2 = process.env.LIVE_PASS_URI_2;
 const LIVE_PASS_URI_3 = process.env.LIVE_PASS_URI_3;
 const LIVE_PASS_URI_4 = process.env.LIVE_PASS_URI_4;
 
-async function testFindCWTClaims(cir, passURI, isLive, pos, maxLen, expectedVCPos, expectedNbfPos, expectedExpPos) {
+async function testFindCWTClaims(cir, passURI, isLive, pos, maxLen, expectedVCPos) {
 
     const verificationResult = verifyPassURIOffline(passURI, { didDocument: isLive ? DID_DOCUMENTS.MOH_LIVE : DID_DOCUMENTS.MOH_EXAMPLE })
     const exp = verificationResult.raw.exp
@@ -103,19 +103,11 @@ async function testFindCWTClaims(cir, passURI, isLive, pos, maxLen, expectedVCPo
     const actualVCPos = Number(witness[1]);
     assert.equal(actualVCPos, expectedVCPos);
 
-    const actualNbfPos = Number(witness[2]);
-    assert.equal(actualNbfPos, expectedNbfPos);
+    const actualNbf = Number(witness[2]);
+    const actualExp = Number(witness[3]);
 
-    const actualExpPos = Number(witness[3]);
-    assert.equal(actualExpPos, expectedExpPos);
-
-    // assert that expiry date is at the right position
-    const actualNbf = bufferToBytes(fittedToBeSigned.slice(actualNbfPos, actualNbfPos + 5));
-    assert.deepEqual(actualNbf, encodeUint(nbf));
-
-    // assert that expiry date is at the right position
-    const actualExp = bufferToBytes(fittedToBeSigned.slice(actualExpPos, actualExpPos + 5));
-    assert.deepEqual(actualExp, encodeUint(exp));
+    assert.equal(actualNbf, nbf);
+    assert.equal(actualExp, exp);
 
 }
 describe("NZCP find CWT claims - example pass", function () {
@@ -128,7 +120,7 @@ describe("NZCP find CWT claims - example pass", function () {
     })
 
     it ("Should find CWT claims of EXAMPLE_PASS_URI", async () => {
-        await testFindCWTClaims(cir, EXAMPLE_PASS_URI, false, 28, maxLen, 76, 62, 68);
+        await testFindCWTClaims(cir, EXAMPLE_PASS_URI, false, 28, maxLen, 76);
     });
 });
 
@@ -142,21 +134,21 @@ describe("NZCP find CWT claims - live pass", function () {
     })
 
     it ("Should find CWT claims of LIVE_PASS_URI_1", async () => {
-        await testFindCWTClaims(cir, LIVE_PASS_URI_1, true, 31, maxLen, 80, 66, 72);
+        await testFindCWTClaims(cir, LIVE_PASS_URI_1, true, 31, maxLen, 80);
     });
     if (LIVE_PASS_URI_2) {
         it ("Should find CWT claims of LIVE_PASS_URI_2", async () => {
-            await testFindCWTClaims(cir, LIVE_PASS_URI_2, true, 31, maxLen, 80, 66, 72);
+            await testFindCWTClaims(cir, LIVE_PASS_URI_2, true, 31, maxLen, 80);
         });
     }
     if (LIVE_PASS_URI_3) {
         it ("Should find CWT claims of LIVE_PASS_URI_3", async () => {
-            await testFindCWTClaims(cir, LIVE_PASS_URI_3, true, 31, maxLen, 80, 66, 72);
+            await testFindCWTClaims(cir, LIVE_PASS_URI_3, true, 31, maxLen, 80);
         });
     }
     if (LIVE_PASS_URI_4) {
         it ("Should find CWT claims of LIVE_PASS_URI_4", async () => {
-            await testFindCWTClaims(cir, LIVE_PASS_URI_4, true, 31, maxLen, 80, 66, 72);
+            await testFindCWTClaims(cir, LIVE_PASS_URI_4, true, 31, maxLen, 80);
         });
     }
 });
