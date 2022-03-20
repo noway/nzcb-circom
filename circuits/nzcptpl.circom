@@ -366,7 +366,7 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
 // @dev concat givenName, familyName and dob with comma as separator
 // @param MaxBufferLen - max length of the buffer
 // TODO: rename to construct nullifier
-template ConcatCredSubj(MaxBufferLen) {
+template ConstructNullifier(MaxBufferLen) {
     var COMMA_CHAR = 44;
     var ConcatSizeBits = log2(MaxBufferLen) + 1;
 
@@ -602,20 +602,20 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     readCredSubj.mapLen <== readMapLengthCredSubj.len;
 
     // concat given name, family name and dob
-    component concatCredSubj = ConcatCredSubj(NULLIFIFER_BYTES);
-    concatCredSubj.givenNameLen <== readCredSubj.givenNameLen;
-    concatCredSubj.familyNameLen <== readCredSubj.familyNameLen;
-    concatCredSubj.dobLen <== readCredSubj.dobLen;
-    for (var i = 0; i < NULLIFIFER_BYTES; i++) { concatCredSubj.givenName[i] <== readCredSubj.givenName[i]; }
-    for (var i = 0; i < NULLIFIFER_BYTES; i++) { concatCredSubj.familyName[i] <== readCredSubj.familyName[i]; }
-    for (var i = 0; i < NULLIFIFER_BYTES; i++) { concatCredSubj.dob[i] <== readCredSubj.dob[i]; }
+    component nullifier = ConstructNullifier(NULLIFIFER_BYTES);
+    nullifier.givenNameLen <== readCredSubj.givenNameLen;
+    nullifier.familyNameLen <== readCredSubj.familyNameLen;
+    nullifier.dobLen <== readCredSubj.dobLen;
+    for (var i = 0; i < NULLIFIFER_BYTES; i++) { nullifier.givenName[i] <== readCredSubj.givenName[i]; }
+    for (var i = 0; i < NULLIFIFER_BYTES; i++) { nullifier.familyName[i] <== readCredSubj.familyName[i]; }
+    for (var i = 0; i < NULLIFIFER_BYTES; i++) { nullifier.dob[i] <== readCredSubj.dob[i]; }
     
     // convert concat string into bits
     component n2bNullifier[NULLIFIFER_BYTES];
     signal nullifierBits[NULLIFIFER_BITS];
     for(var k = 0; k < NULLIFIFER_BYTES; k++) {
         n2bNullifier[k] = Num2Bits(8);
-        n2bNullifier[k].in <== concatCredSubj.result[k];
+        n2bNullifier[k].in <== nullifier.result[k];
         for (var j = 0; j < 8; j++) {
             nullifierBits[k*8 + (7 - j)] <== n2bNullifier[k].out[j];
         }
