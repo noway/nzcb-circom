@@ -1,7 +1,7 @@
 pragma circom 2.0.3;
 
-include "../snark-jwt-verify/circomlib/circuits/comparators.circom";
-include "../snark-jwt-verify/circomlib/circuits/gates.circom";
+include "../sha256-var-circom-main/snark-jwt-verify/circomlib/circuits/comparators.circom";
+include "../sha256-var-circom-main/snark-jwt-verify/circomlib/circuits/gates.circom";
 
 template BinAdd(nbits) {
     signal input op1[nbits];
