@@ -89,6 +89,22 @@ describe("BinAdd", function () {
             }
         }
     });
+    it ("BinAdd(496) 0 test", async () => {
+        const zero = new Uint8Array(Array(62).fill(0x00))
+        const op1 = bufferToBitArray(zero);
+        const op2 = bufferToBitArray(zero)
+        const witness = await cir496.calculateWitness({ op1, op2 }, true);
+        const outFull = witness.slice(1, 496+1+1);
+        assert.equal(bitArrayToNum(op1) + bitArrayToNum(op2), bitArrayToNum(outFull));            
+    });
+    it ("BinAdd(496) a number", async () => {
+        const num = new Uint8Array(Array(62).fill().map((_, i) => i))
+        const op1 = bufferToBitArray(num);
+        const op2 = bufferToBitArray(num)
+        const witness = await cir496.calculateWitness({ op1, op2 }, true);
+        const outFull = witness.slice(1, 496+1+1);
+        assert.equal(bitArrayToNum(op1) + bitArrayToNum(op2), bitArrayToNum(outFull));            
+    });
     it ("BinAdd(496) overflow test", async () => {
         const limit = new Uint8Array(Array(62).fill(0xFF))
         const one = new Uint8Array([0x80, ...Array(61).fill(0x00)])
