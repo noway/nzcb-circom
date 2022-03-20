@@ -471,6 +471,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     var NULLIFIFER_BYTES = 64;
     var NULLIFIFER_BITS = NULLIFIFER_BYTES * 8;
 
+    // half of the nullifier hash that is going to be scrambled to produce nullifierRange
     var NULLIFIFER_HASH_HALF_BITS = 256;
 
     // compile time parameters
