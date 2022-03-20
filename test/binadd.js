@@ -110,12 +110,12 @@ describe("BinAdd", function () {
         const one = new Uint8Array([0x80, ...Array(61).fill(0x00)])
         const op1 = bufferToBitArray(limit);
         const op2 = bufferToBitArray(one)
-        console.log('op1', op1.join(""), op1.length);
-        console.log('op2', op2.join(""), op2.length);
+        // console.log('op1', op1.join(""), op1.length);
+        // console.log('op2', op2.join(""), op2.length);
         const witness = await cir496.calculateWitness({ op1, op2 }, true);
         const outFull = witness.slice(1, 496+1+1);
         const outCropped = witness.slice(1, 496+1);
-        console.log('out', outCropped.join(""), outCropped.length)
+        // console.log('out', outCropped.join(""), outCropped.length)
         assert.equal(bitArrayToNum(op1) + bitArrayToNum(op2), bitArrayToNum(outFull));            
         assert.equal(0, bitArrayToNum(outCropped));            
     });
