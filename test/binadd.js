@@ -1,8 +1,6 @@
 const chai = require("chai");
 const { wasm: wasm_tester } = require("circom_tester");
-const chaiAsPromised = require("chai-as-promised");
 const {bitArrayToNum} = require('./helpers/utils.js');
-chai.use(chaiAsPromised);
 const { assert } = chai;
 
 
