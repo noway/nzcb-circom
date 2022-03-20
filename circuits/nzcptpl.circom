@@ -663,7 +663,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
         outB2n[1].in[i] <== binadd.out[i + CHUNK_LEN_BITS];
     }
     for (var i = 0; i < 16; i++) {
-        outB2n[2].in[i] <== n2bNbf.out[i + CHUNK_LEN_BITS + CHUNK_LEN_BITS];
+        outB2n[2].in[i] <== binadd.out[i + CHUNK_LEN_BITS + CHUNK_LEN_BITS];
     }
 
     // pack ToBeSigned sha256
@@ -681,12 +681,12 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
 
     // Pack exp
     for(var i = 24 + TIMESTAMP_BITS; i < 24 + 2 * TIMESTAMP_BITS; i++) {
-        outB2n[1].in[i] <== n2bExp.out[i - 24 - TIMESTAMP_BITS];
+        outB2n[3].in[i] <== n2bExp.out[i - 24 - TIMESTAMP_BITS];
     }
 
     // Pack the pass-thru data
     for(var i = 24 + 2 * TIMESTAMP_BITS; i < CHUNK_LEN_BITS; i++) {
-        outB2n[1].in[i] <== data[i - (24 + 2 * TIMESTAMP_BITS)];
+        outB2n[3].in[i] <== data[i - (24 + 2 * TIMESTAMP_BITS)];
     }
 
     out[0] <== outB2n[0].out;
