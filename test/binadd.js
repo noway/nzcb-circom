@@ -29,4 +29,20 @@ describe("BinAdd", function () {
             }
         }
     });
+    it ("BinAdd(2) exhaustively", async () => {
+        for (var i = 0; i < 2; i++) {
+            for (var j = 0; j < 2; j++) {
+                for (var x = 0; x < 2; x++) {
+                    for (var y = 0; y < 2; y++) {
+                        const op1 = [i, x]
+                        const op2 = [j, y]
+                        const witness = await cir2.calculateWitness({ op1, op2 }, true);
+                        const out = witness.slice(1,4);
+                        console.log(bitArrayToNum(out))
+                        assert.equal(bitArrayToNum(op1) + bitArrayToNum(op2), bitArrayToNum(out));            
+                    }
+                }
+            }
+        }
+    });
 });
