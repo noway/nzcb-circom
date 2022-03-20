@@ -457,18 +457,17 @@ template ConcatCredSubj(MaxBufferLen) {
 template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborMapLenVC, MaxCborArrayLenCredSubj, MaxCborMapLenCredSubj) {
     // constants
     var SHA256_LEN = 256;
+    var SHA512_LEN = 512;
     var BLOCK_SIZE = 512;
     var CLAIMS_SKIP_EXAMPLE = 27;
     var CLAIMS_SKIP_LIVE = 30;
     var CHUNK_LEN_BITS = 248;
-    var SHA256_LEN_CHUNKS = 2;
     var OUT_SIGNALS = 4;
-    var CHUNK_SIGNALS = 2;
     var TIMESTAMP_BITS = 8 * 4;
 
 
     // compile time parameters
-    var DataLen = CHUNK_LEN_BITS * CHUNK_SIGNALS - SHA256_LEN - TIMESTAMP_BITS * 2;
+    var DataLen = CHUNK_LEN_BITS * OUT_SIGNALS - SHA512_LEN - SHA256_LEN - TIMESTAMP_BITS * 2;
     var ClaimsSkip = IsLive ? CLAIMS_SKIP_LIVE : CLAIMS_SKIP_EXAMPLE;
 
     // ToBeSigned hash

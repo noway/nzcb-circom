@@ -15,16 +15,8 @@ require('dotenv').config()
 
 // get a well distributed random field element in the domain of Z/pZ
 // this might return not perfectly well distributed random values, but it's within 1 bit of being well-distributed
-function getRandomFieldElement() {
-    const p = Scalar.fromString("21888242871839275222246405745257275088548364400416034343698204186575808495617");
-    const Fr = new F1Field(p);
-    const randomBytes32 = crypto.randomBytes(32)
-    const randomBits = bufferToBitArray(randomBytes32);
-    // log2(p) is 253.596691355002 so we need at least 254 bits
-    const randomBits254 = randomBits.slice(0, 254);
-    const r = bitArrayToNum(randomBits254)
-    const s = Fr.e(r)
-    return s
+function getRandomBytes32() {
+    return crypto.randomBytes(32)
 }
 
 
@@ -34,14 +26,9 @@ async function getNZCPPubIdentity(passURI, secretIndex, isLive) {
     const credSubjConcat = `${givenName},${familyName},${dob}` // TODO: rename to nullifier
     const cose = getCOSE(passURI);
     const toBeSigned = encodeToBeSigned(cose.bodyProtected, cose.payload);
-    const babyJub = await buildBabyJub();
-    const F = babyJub.F;
-    const pedersen = await buildPedersenHash();
     const nullifier = fitBytes(new TextEncoder().encode(credSubjConcat), 64);
-    const h = pedersen.hash(nullifier);
-    const hP = babyJub.unpackPoint(h);
-    const nullifierHash = [F.toObject(hP[0]), F.toObject(hP[1])]
-    const nullififerRange = [nullifierHash[0], nullifierHash[1] + secretIndex]
+    const nullifierHash = crypto.createHash('sha512').update(nullifier).digest('bytes')
+    const nullififerRange = bitArrayToNum(bufferToBitArray(nullifierHash)) + bitArrayToNum(bufferToBitArray(secretIndex))
     const toBeSignedHash = crypto.createHash('sha256').update(toBeSigned).digest('hex')
     const nbf = verificationResult.raw.nbf
     const exp = verificationResult.raw.exp
@@ -52,35 +39,34 @@ async function getNZCPPubIdentity(passURI, secretIndex, isLive) {
 }
 
 async function testNZCPPubIdentity(cir, passURI, isLive, maxLen) {
-    const SHA256_BYTES = 32;
+    const SHA256_BITS = 256;
     const TIMESTAMP_BITS = 8 * 4;
 
-    const secretIndex = getRandomFieldElement();
+    const secretIndex = getRandomBytes32();
     const expected = await getNZCPPubIdentity(passURI, secretIndex, isLive);
 
-    const passThruData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16]);
+    const passThruData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14]);
     const cose = getCOSE(passURI);
     const toBeSigned = encodeToBeSigned(cose.bodyProtected, cose.payload);
     const fittedToBeSigned = fitBytes(toBeSigned, maxLen);
-    const input = { toBeSigned: bufferToBitArray(fittedToBeSigned), toBeSignedLen: toBeSigned.length, data: bufferToBitArray(passThruData), secretIndex }
+    const input = { toBeSigned: bufferToBitArray(fittedToBeSigned), toBeSignedLen: toBeSigned.length, data: bufferToBitArray(passThruData), secretIndex: bufferToBitArray(secretIndex) };
     const witness = await cir.calculateWitness(input, true);
 
     const out = witness.slice(1, 5);
-    const nullifierRange = out.slice(0, 2);
+    const bits = chunksToBits(out, 248);
 
-    const bits = chunksToBits(out.slice(2), 248);
-
-    const toBeSignedHashBits = bits.slice(0, SHA256_BYTES * 8);
-    const nbfBits = bits.slice(SHA256_BYTES * 8, SHA256_BYTES * 8 + TIMESTAMP_BITS);
-    const expBits = bits.slice(SHA256_BYTES * 8 + TIMESTAMP_BITS, SHA256_BYTES * 8 + 2 * TIMESTAMP_BITS);
-    const dataBits = bits.slice(SHA256_BYTES * 8 + 2 * TIMESTAMP_BITS);
+    const nullifierRangeBits = bits.slice(0, 512)
+    const toBeSignedHashBits = bits.slice(512, 512 + SHA256_BITS);
+    const nbfBits = bits.slice(512 + SHA256_BITS, 512 + SHA256_BITS + TIMESTAMP_BITS);
+    const expBits = bits.slice(512 + SHA256_BITS + TIMESTAMP_BITS, 512 + SHA256_BITS + 2 * TIMESTAMP_BITS);
+    const dataBits = bits.slice(512 + SHA256_BITS + 2 * TIMESTAMP_BITS);
     
 
+    const nullifierRange = bitArrayToNum(nullifierRangeBits);
     const toBeSignedHash = bitArrayToBuffer(toBeSignedHashBits)
     const toBeSignedHashHex = toHexString(toBeSignedHash);
 
-    assert.equal(nullifierRange[0], expected.nullififerRange[0]);
-    assert.equal(nullifierRange[1], expected.nullififerRange[1]);
+    assert.equal(nullifierRange, expected.nullififerRange);
     assert.equal(toBeSignedHashHex, expected.toBeSignedHash);
 
     const nbf = bitArrayToNum(nbfBits);
