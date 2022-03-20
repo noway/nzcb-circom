@@ -636,10 +636,10 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
 
     // add secretIndex to nullifierHash to get nullifierRange
     // sum the bit nullifier hash bit array with secretIndex bit array
-    component binadd = BinAdd(NULLIFIFER_HASH_COORD_LEN_BITS * 2, 2);
+    component binadd = BinAdd(NULLIFIFER_HASH_COORD_LEN_BITS * 2);
     for (var i = 0; i < NULLIFIFER_HASH_COORD_LEN_BITS * 2; i++) {
-        binadd.in[0][i] <== nullifierSha512.out[i];
-        binadd.in[1][i] <== i < NULLIFIFER_HASH_COORD_LEN_BITS ? secretIndex[i] : 0;
+        binadd.op1[i] <== nullifierSha512.out[i];
+        binadd.op2[i] <== i < NULLIFIFER_HASH_COORD_LEN_BITS ? secretIndex[i] : 0;
     }
 
     // export
