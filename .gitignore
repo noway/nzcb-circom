@@ -11,6 +11,8 @@ nzcp.circom
 cbor.circom
 sha256-var-circom.zip
 sha256-var-circom-main
+sha512.zip
+sha512-master
 .env
 nzcp_exampleTest_js
 nzcp_liveTest_js

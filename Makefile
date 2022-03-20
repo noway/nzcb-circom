@@ -24,7 +24,13 @@ sha256-var-circom-main/: sha256-var-circom.zip
 	unzip $<
 	cd $@ && make
 
-circuits/nzcp.circom: circuits/cbor.circom sha256-var-circom-main
+sha512.zip:
+	curl -Lo $@ https://github.com/noway/sha512/archive/refs/heads/master.zip
+
+sha512-master/: sha512.zip
+	unzip $<
+
+circuits/nzcp.circom: circuits/cbor.circom sha256-var-circom-main sha512-master
 	cpp -P circuits/nzcptpl.circom > $@
 
 circuits/cbor.circom: sha256-var-circom-main
@@ -53,4 +59,6 @@ ceremony:
 clean:
 	rm -rf sha256-var-circom.zip
 	rm -rf sha256-var-circom-main
+	rm -rf sha512.zip
+	rm -rf sha512-master
 	rm -rf node_modules
