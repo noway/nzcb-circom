@@ -446,6 +446,7 @@ template ConcatCredSubj(MaxBufferLen) {
     resultLen <== givenNameLen + 1 + familyNameLen + 1 + dobLen;
 }
 
+// TODO: abstract out credSubjPos, exp and nbf to a separate template? Easier to stub then
 // @dev get NZCP public identity based on ToBeSigned
 // @dev only 64 bytes is used for nullifier `${givenName},${familyName},${dob}`
 // @param IsLive - are we to use live or example NZCP?
