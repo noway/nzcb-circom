@@ -4,7 +4,9 @@ include "../sha256-var-circom-main/snark-jwt-verify/circomlib/circuits/gates.cir
 include "../sha256-var-circom-main/snark-jwt-verify/circomlib/circuits/comparators.circom";
 include "../sha256-var-circom-main/snark-jwt-verify/circomlib/circuits/pedersen.circom";
 include "../sha256-var-circom-main/circuits/sha256Var.circom";
+include "../sha512-master/circuits/sha512/sha512.circom";
 include "./cbor.circom";
+include "./binadd.circom";
 
 /* CBOR types */
 #define MAJOR_TYPE_INT 0
@@ -484,7 +486,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     var NULLIFIFER_LEN_BITS = NULLIFIFER_LEN * 8;
 
     // we are only using 248 bits of each coordinate (~253.596691355002 bits each)
-    var NULLIFIFER_HASH_COORD_LEN_BITS = 248; // TODO: rename to NULLIFIFER_HASH_COORD_LEN
+    var NULLIFIFER_HASH_COORD_LEN_BITS = 256; // TODO: rename to NULLIFIFER_HASH_COORD_LEN
 
     // i/o signals
     signal input toBeSigned[MaxToBeSignedBits]; // gets zero-outted beyond length
@@ -626,49 +628,19 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     // nullifierRange = nullifierHash + secretIndex
     // In the contract, we will be checking that nullifierHash is within (nullifierRange - 2^256, nullifierRange]
     // TODO: make sure that setting secret to 0 or 0xFF...FF doesn't allow you to multiple spend the same nullifier
-
     signal nullifierRange[2];
-    component nullifierPedersen = Pedersen(NULLIFIFER_LEN_BITS);
+    component nullifierSha512 = Sha512(NULLIFIFER_LEN_BITS);
     for (var i = 0; i < NULLIFIFER_LEN_BITS; i++) {
-        nullifierPedersen.in[i] <== nullifierBits[i];
+        nullifierSha512.in[i] <== nullifierBits[i];
     }
 
     // add secretIndex to nullifierHash to get nullifierRange
-
-    // jam x and y nullifier hash coordinates into one bit array
-    component n2bNullifierHash[2];
-    n2bNullifierHash[0] = Num2Bits(NULLIFIFER_HASH_COORD_LEN_BITS);
-    n2bNullifierHash[1] = Num2Bits(NULLIFIFER_HASH_COORD_LEN_BITS);
-    n2bNullifierHash[0].in <== nullifierPedersen.out[0];
-    n2bNullifierHash[1].in <== nullifierPedersen.out[1];
-    
     // sum the bit nullifier hash bit array with secretIndex bit array
-    component bs = BinSum(NULLIFIFER_HASH_COORD_LEN_BITS * 2, 2);
-    for (var i = 0; i < NULLIFIFER_HASH_COORD_LEN_BITS; i++) {
-        bs.in[0][i] <== n2bNullifierHash[0].out[i];
+    component binadd = BinAdd(NULLIFIFER_HASH_COORD_LEN_BITS * 2, 2);
+    for (var i = 0; i < NULLIFIFER_HASH_COORD_LEN_BITS * 2; i++) {
+        binadd.in[0][i] <== nullifierSha512.out[i];
+        binadd.in[1][i] <== i < NULLIFIFER_HASH_COORD_LEN_BITS ? secretIndex[i] : 0;
     }
-    for (var i = NULLIFIFER_HASH_COORD_LEN_BITS; i < NULLIFIFER_HASH_COORD_LEN_BITS * 2; i++) {
-        bs.in[0][i] <== n2bNullifierHash[1].out[i - NULLIFIFER_HASH_COORD_LEN_BITS];
-    }
-    for (var i = 0; i < NULLIFIFER_HASH_COORD_LEN_BITS; i++) {
-        bs.in[1][i] <== secretIndex[i];
-    }
-    for (var i = NULLIFIFER_HASH_COORD_LEN_BITS; i < NULLIFIFER_HASH_COORD_LEN_BITS * 2; i++) {
-        bs.in[1][i] <== 0;
-    }
-
-    // convert the bit array back into 2 signals
-    component b2nNullifierRange[2];
-    b2nNullifierRange[0] = Bits2Num(NULLIFIFER_HASH_COORD_LEN_BITS);
-    b2nNullifierRange[1] = Bits2Num(NULLIFIFER_HASH_COORD_LEN_BITS);
-    for (var i = 0; i < NULLIFIFER_HASH_COORD_LEN_BITS; i++) {
-        b2nNullifierRange[0].in[i] <== bs.out[i];
-    }
-    for (var i = NULLIFIFER_HASH_COORD_LEN_BITS; i < NULLIFIFER_HASH_COORD_LEN_BITS * 2; i++) {
-        b2nNullifierRange[1].in[i - NULLIFIFER_HASH_COORD_LEN_BITS] <== bs.out[i];
-    }
-    nullifierRange[0] <== b2nNullifierRange[0].out;
-    nullifierRange[1] <== b2nNullifierRange[1].out;
 
     // export
     component n2bNbf = Num2Bits(TIMESTAMP_BITS);
@@ -677,37 +649,50 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     component n2bExp = Num2Bits(TIMESTAMP_BITS);
     n2bExp.in <== exp;
 
-    component outB2n[3];
+    component outB2n[4]; // we output 4 signals
     outB2n[0] = Bits2Num(CHUNK_LEN_BITS);
     outB2n[1] = Bits2Num(CHUNK_LEN_BITS);
+    outB2n[2] = Bits2Num(CHUNK_LEN_BITS);
+    outB2n[3] = Bits2Num(CHUNK_LEN_BITS);
+
+    // pack nullifierRange
+    for (var i = 0; i < CHUNK_LEN_BITS; i++) {
+        outB2n[0].in[i] <== binadd.out[i];
+    }
+    for (var i = 0; i < CHUNK_LEN_BITS; i++) {
+        outB2n[1].in[i] <== binadd.out[i + CHUNK_LEN_BITS];
+    }
+    for (var i = 0; i < 16; i++) {
+        outB2n[2].in[i] <== n2bNbf.out[i + CHUNK_LEN_BITS + CHUNK_LEN_BITS];
+    }
 
     // pack ToBeSigned sha256
-    for(var k = 0; k < CHUNK_LEN_BITS; k++) {
-        outB2n[0].in[k] <== tbsSha256.out[k];
+    for(var i = 16; i < CHUNK_LEN_BITS; i++) {
+        outB2n[2].in[i] <== tbsSha256.out[i - 16];
     }
-    for(var k = 0; k < 8; k++) {
-        outB2n[1].in[k] <== tbsSha256.out[CHUNK_LEN_BITS + k];
+    for(var i = 0; i < 24; i++) {
+        outB2n[3].in[i] <== tbsSha256.out[i + 232];
     }
 
     // Pack nbf
-    for(var k = 8; k < 8 + TIMESTAMP_BITS; k++) {
-        outB2n[1].in[k] <== n2bNbf.out[k - 8];
+    for(var i = 24; i < 24 + TIMESTAMP_BITS; i++) {
+        outB2n[3].in[i] <== n2bNbf.out[i - 24];
     }
 
     // Pack exp
-    for(var k = 8 + TIMESTAMP_BITS; k < 8 + 2 * TIMESTAMP_BITS; k++) {
-        outB2n[1].in[k] <== n2bExp.out[k - 8 - TIMESTAMP_BITS];
+    for(var i = 24 + TIMESTAMP_BITS; i < 24 + 2 * TIMESTAMP_BITS; i++) {
+        outB2n[1].in[i] <== n2bExp.out[i - 24 - TIMESTAMP_BITS];
     }
 
     // Pack the pass-thru data
-    for(var k = 8 + 2 * TIMESTAMP_BITS; k < CHUNK_LEN_BITS; k++) {
-        outB2n[1].in[k] <== data[k - (8 + 2 * TIMESTAMP_BITS)];
+    for(var i = 24 + 2 * TIMESTAMP_BITS; i < CHUNK_LEN_BITS; i++) {
+        outB2n[1].in[i] <== data[i - (24 + 2 * TIMESTAMP_BITS)];
     }
 
-    out[0] <== nullifierRange[0];
-    out[1] <== nullifierRange[1];
-    out[2] <== outB2n[0].out;
-    out[3] <== outB2n[1].out;
+    out[0] <== outB2n[0].out;
+    out[1] <== outB2n[1].out;
+    out[2] <== outB2n[2].out;
+    out[3] <== outB2n[3].out;
 }
 
 
