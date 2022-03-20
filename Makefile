@@ -56,13 +56,16 @@ plonk:
 	snarkjs zkey export verificationkey nzcp_exampleTest_final.zkey verification_key.json
 	snarkjs zkey export solidityverifier nzcp_exampleTest_final.zkey contracts/VerifierExample.sol
 
-ceremony:
+phase1:
 	snarkjs powersoftau new bn128 21 pot21_0000.ptau -v
 	snarkjs powersoftau contribute pot21_0000.ptau pot21_0001.ptau --name="First contribution" -v
 	snarkjs powersoftau prepare phase2 pot21_0001.ptau pot21_final.ptau -v
+
+phase2:
 	snarkjs groth16 setup nzcp_example.r1cs pot21_final.ptau nzcp_example_0000.zkey
 	snarkjs zkey contribute nzcp_example_0000.zkey nzcp_example_0001.zkey --name="1st Contributor Name" -v
 	snarkjs zkey export verificationkey nzcp_example_0001.zkey verification_key.json
+	snarkjs zkey export solidityverifier nzcp_example_0001.zkey contracts/VerifierExample.sol
 
 
 
