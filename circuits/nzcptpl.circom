@@ -365,7 +365,6 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
 
 // @dev concat givenName, familyName and dob with comma as separator
 // @param MaxBufferLen - max length of the buffer
-// TODO: rename to construct nullifier
 template ConstructNullifier(MaxBufferLen) {
     var COMMA_CHAR = 44;
     var ConcatSizeBits = log2(MaxBufferLen) + 1;
