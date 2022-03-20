@@ -42,7 +42,7 @@ template FindCWTClaims(BytesLen, MaxCborArrayLen, MaxCborMapLen) {
     signal input bytes[BytesLen];
     signal input pos;
 
-    signal output needlePos;
+    signal output vcPos;
     signal output nbf;
     signal output exp;
 
@@ -152,7 +152,7 @@ template FindCWTClaims(BytesLen, MaxCborArrayLen, MaxCborMapLen) {
         expPosTally.nums[k] <== isExpAccepted[k] * decodeUint[k].nextPos;
     }
 
-    needlePos <== foundPosTally.sum;
+    vcPos <== foundPosTally.sum;
 
     // read nbf field in the map
     component nbfReadType = ReadType(BytesLen);
@@ -560,14 +560,12 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     readMapLengthClaims.pos <== ClaimsSkip;
 
     // find "vc" key pos in the map
-    signal vcPos;
     signal nbf;
     signal exp;
     component findVC = FindCWTClaims(MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborMapLenVC);
     copyBytes(ToBeSigned, findVC.bytes, MaxToBeSignedBytes)
     findVC.pos <== readMapLengthClaims.nextPos;
     findVC.mapLen <== readMapLengthClaims.len;
-    vcPos <== findVC.needlePos;
     nbf <== findVC.nbf;
     exp <== findVC.exp;
 
@@ -575,7 +573,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     // find credential subject
     component readMapLengthVC = ReadMapLength(MaxToBeSignedBytes);
     copyBytes(ToBeSigned, readMapLengthVC.bytes, MaxToBeSignedBytes)
-    readMapLengthVC.pos <== vcPos;
+    readMapLengthVC.pos <== findVC.vcPos;
 
     signal credSubjPos;
     component findCredSubj = FindCredSubj(MaxToBeSignedBytes, MaxCborArrayLenCredSubj, MaxCborMapLenCredSubj);
