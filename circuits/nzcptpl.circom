@@ -625,6 +625,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     // nullifierHash = Pedersen(nullifier)
     // nullifierRange = nullifierHash + secretIndex
     // In the contract, we will be checking that nullifierHash is within (nullifierRange - 2^256, nullifierRange]
+    // TODO: make sure that setting secret to 0 or 0xFF...FF doesn't allow you to multiple spend the same nullifier
 
     signal nullifierRange[2];
     component nullifierPedersen = Pedersen(NULLIFIFER_LEN_BITS);
