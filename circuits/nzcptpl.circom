@@ -471,7 +471,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     var NULLIFIFER_BYTES = 64;
     var NULLIFIFER_BITS = NULLIFIFER_BYTES * 8;
 
-    var NULLIFIFER_HASH_HALF_BITS = 256; // TODO: rename to NULLIFIFER_HASH_COORD_LEN
+    var NULLIFIFER_HASH_HALF_BITS = 256;
 
     // compile time parameters
     var DataLen = CHUNK_BITS * OUT_SIGNALS - SHA512_BITS - SHA256_BITS - TIMESTAMP_BITS * 2;
