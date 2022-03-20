@@ -141,26 +141,6 @@ const encodeBytes = data => {
   throw new Error('Too big data');
 };
 
-// function getToBeSignedAndRs(pass) {
-//   const data = decodeCOSE(Stream.fromBase32(pass.substring(8)))
-//   const sig_structure = new Uint8Array([
-//     // array w/ 4 items
-//     0x84,
-//     // #1: context: "Signature1"
-//     0x6A, 0x53, 0x69, 0x67, 0x6E, 0x61, 0x74, 0x75, 0x72, 0x65, 0x31,
-//     // #2: body_protected: CWT headers
-//     ...encodeBytes(data.bodyProtected),
-//     // #3: external_aad: empty
-//     ...encodeBytes([]),
-//     // #4: payload: CWT claims
-//     ...encodeBytes(data.payload),
-//   ]);
-//   const ToBeSigned = buf2hex(sig_structure);
-//   const r = `${buf2hex(data.signature.slice(0, 32))}`.toUpperCase()
-//   const s = `${buf2hex(data.signature.slice(32, 64))}`.toUpperCase()
-//   return { ToBeSigned, rs: [r, s] }
-// }
-
 
 function decodeBytes(passURI) {
   // not verifying version-identifier or the prefix
