@@ -457,18 +457,24 @@ template ConcatCredSubj(MaxBufferLen) {
 // @param MaxCborMapLenCredSubj - maximum number of elements in the CBOR map for credential subject
 template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborMapLenVC, MaxCborArrayLenCredSubj, MaxCborMapLenCredSubj) {
     // constants
-    var SHA256_LEN = 256;
-    var SHA512_LEN = 512;
+    var SHA256_BITS = 256;
+    var SHA512_BITS = 512;
     var BLOCK_SIZE = 512;
     var CLAIMS_SKIP_EXAMPLE = 27;
     var CLAIMS_SKIP_LIVE = 30;
-    var CHUNK_LEN_BITS = 248;
+    var CHUNK_BITS = 248;
     var OUT_SIGNALS = 4;
     var TIMESTAMP_BITS = 8 * 4;
 
+    // concat string aka the nullifier
+    // Only 64 character latin strings are supported.
+    var NULLIFIFER_BYTES = 64;
+    var NULLIFIFER_BITS = NULLIFIFER_BYTES * 8;
+
+    var NULLIFIFER_HASH_HALF_BITS = 256; // TODO: rename to NULLIFIFER_HASH_COORD_LEN
 
     // compile time parameters
-    var DataLen = CHUNK_LEN_BITS * OUT_SIGNALS - SHA512_LEN - SHA256_LEN - TIMESTAMP_BITS * 2;
+    var DataLen = CHUNK_BITS * OUT_SIGNALS - SHA512_BITS - SHA256_BITS - TIMESTAMP_BITS * 2;
     var ClaimsSkip = IsLive ? CLAIMS_SKIP_LIVE : CLAIMS_SKIP_EXAMPLE;
 
     // ToBeSigned hash
@@ -480,18 +486,10 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
 
     assert(MaxToBeSignedBits <= ToBeSignedMaxBits); // compile time check
 
-    // concat string aka the nullifier
-    // Only 64 character latin strings are supported.
-    var NULLIFIFER_LEN = 64;
-    var NULLIFIFER_LEN_BITS = NULLIFIFER_LEN * 8;
-
-    // we are only using 248 bits of each coordinate (~253.596691355002 bits each)
-    var NULLIFIFER_HASH_COORD_LEN_BITS = 256; // TODO: rename to NULLIFIFER_HASH_COORD_LEN
-
     // i/o signals
     signal input toBeSigned[MaxToBeSignedBits]; // gets zero-outted beyond length
     signal input toBeSignedLen; // length of toBeSigned in bytes
-    signal input secretIndex[NULLIFIFER_HASH_COORD_LEN_BITS]; // secretIndex in the nullifierRange where nullifierHash resides. Provided as bits.
+    signal input secretIndex[NULLIFIFER_HASH_HALF_BITS]; // secretIndex in the nullifierRange where nullifierHash resides. Provided as bits.
     signal input data[DataLen]; // extra pass-thru data for various purposes, fill with 0s of not needed
     signal output out[OUT_SIGNALS];
 
@@ -597,24 +595,24 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
 
 
     // read credential subject map
-    component readCredSubj = ReadCredSubj(MaxToBeSignedBytes, NULLIFIFER_LEN);
+    component readCredSubj = ReadCredSubj(MaxToBeSignedBytes, NULLIFIFER_BYTES);
     copyBytes(ToBeSigned, readCredSubj.bytes, MaxToBeSignedBytes)
     readCredSubj.pos <== readMapLengthCredSubj.nextPos;
     readCredSubj.mapLen <== readMapLengthCredSubj.len;
 
     // concat given name, family name and dob
-    component concatCredSubj = ConcatCredSubj(NULLIFIFER_LEN);
+    component concatCredSubj = ConcatCredSubj(NULLIFIFER_BYTES);
     concatCredSubj.givenNameLen <== readCredSubj.givenNameLen;
     concatCredSubj.familyNameLen <== readCredSubj.familyNameLen;
     concatCredSubj.dobLen <== readCredSubj.dobLen;
-    for (var i = 0; i < NULLIFIFER_LEN; i++) { concatCredSubj.givenName[i] <== readCredSubj.givenName[i]; }
-    for (var i = 0; i < NULLIFIFER_LEN; i++) { concatCredSubj.familyName[i] <== readCredSubj.familyName[i]; }
-    for (var i = 0; i < NULLIFIFER_LEN; i++) { concatCredSubj.dob[i] <== readCredSubj.dob[i]; }
+    for (var i = 0; i < NULLIFIFER_BYTES; i++) { concatCredSubj.givenName[i] <== readCredSubj.givenName[i]; }
+    for (var i = 0; i < NULLIFIFER_BYTES; i++) { concatCredSubj.familyName[i] <== readCredSubj.familyName[i]; }
+    for (var i = 0; i < NULLIFIFER_BYTES; i++) { concatCredSubj.dob[i] <== readCredSubj.dob[i]; }
     
     // convert concat string into bits
-    component n2bNullifier[NULLIFIFER_LEN];
-    signal nullifierBits[NULLIFIFER_LEN_BITS];
-    for(var k = 0; k < NULLIFIFER_LEN; k++) {
+    component n2bNullifier[NULLIFIFER_BYTES];
+    signal nullifierBits[NULLIFIFER_BITS];
+    for(var k = 0; k < NULLIFIFER_BYTES; k++) {
         n2bNullifier[k] = Num2Bits(8);
         n2bNullifier[k].in <== concatCredSubj.result[k];
         for (var j = 0; j < 8; j++) {
@@ -629,17 +627,17 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     // In the contract, we will be checking that nullifierHash is within (nullifierRange - 2^256, nullifierRange]
     // TODO: make sure that setting secret to 0 or 0xFF...FF does not allow you to multiple spend the same nullifier
     signal nullifierRange[2];
-    component nullifierSha512 = Sha512(NULLIFIFER_LEN_BITS);
-    for (var i = 0; i < NULLIFIFER_LEN_BITS; i++) {
+    component nullifierSha512 = Sha512(NULLIFIFER_BITS);
+    for (var i = 0; i < NULLIFIFER_BITS; i++) {
         nullifierSha512.in[i] <== nullifierBits[i];
     }
 
     // add secretIndex to nullifierHash to get nullifierRange
     // sum the bit nullifier hash bit array with secretIndex bit array
-    component binadd = BinAdd(NULLIFIFER_HASH_COORD_LEN_BITS * 2);
-    for (var i = 0; i < NULLIFIFER_HASH_COORD_LEN_BITS * 2; i++) {
+    component binadd = BinAdd(NULLIFIFER_HASH_HALF_BITS * 2);
+    for (var i = 0; i < NULLIFIFER_HASH_HALF_BITS * 2; i++) {
         binadd.op1[i] <== nullifierSha512.out[i];
-        binadd.op2[i] <== i < NULLIFIFER_HASH_COORD_LEN_BITS ? secretIndex[i] : 0;
+        binadd.op2[i] <== i < NULLIFIFER_HASH_HALF_BITS ? secretIndex[i] : 0;
     }
 
     // export
@@ -650,24 +648,24 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     n2bExp.in <== exp;
 
     component outB2n[4]; // we output 4 signals
-    outB2n[0] = Bits2Num(CHUNK_LEN_BITS);
-    outB2n[1] = Bits2Num(CHUNK_LEN_BITS);
-    outB2n[2] = Bits2Num(CHUNK_LEN_BITS);
-    outB2n[3] = Bits2Num(CHUNK_LEN_BITS);
+    outB2n[0] = Bits2Num(CHUNK_BITS);
+    outB2n[1] = Bits2Num(CHUNK_BITS);
+    outB2n[2] = Bits2Num(CHUNK_BITS);
+    outB2n[3] = Bits2Num(CHUNK_BITS);
 
     // pack nullifierRange
-    for (var i = 0; i < CHUNK_LEN_BITS; i++) {
+    for (var i = 0; i < CHUNK_BITS; i++) {
         outB2n[0].in[i] <== binadd.out[i];
     }
-    for (var i = 0; i < CHUNK_LEN_BITS; i++) {
-        outB2n[1].in[i] <== binadd.out[i + CHUNK_LEN_BITS];
+    for (var i = 0; i < CHUNK_BITS; i++) {
+        outB2n[1].in[i] <== binadd.out[i + CHUNK_BITS];
     }
     for (var i = 0; i < 16; i++) {
-        outB2n[2].in[i] <== binadd.out[i + CHUNK_LEN_BITS + CHUNK_LEN_BITS];
+        outB2n[2].in[i] <== binadd.out[i + CHUNK_BITS + CHUNK_BITS];
     }
 
     // pack ToBeSigned sha256
-    for(var i = 16; i < CHUNK_LEN_BITS; i++) {
+    for(var i = 16; i < CHUNK_BITS; i++) {
         outB2n[2].in[i] <== tbsSha256.out[i - 16];
     }
     for(var i = 0; i < 24; i++) {
@@ -685,7 +683,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     }
 
     // Pack the pass-thru data
-    for(var i = 24 + 2 * TIMESTAMP_BITS; i < CHUNK_LEN_BITS; i++) {
+    for(var i = 24 + 2 * TIMESTAMP_BITS; i < CHUNK_BITS; i++) {
         outB2n[3].in[i] <== data[i - (24 + 2 * TIMESTAMP_BITS)];
     }
 

@@ -40,6 +40,7 @@ async function getNZCPPubIdentity(passURI, secretIndex, isLive) {
 
 async function testNZCPPubIdentity(cir, passURI, isLive, maxLen) {
     const SHA256_BITS = 256;
+    const SHA512_BITS = 512;
     const TIMESTAMP_BITS = 8 * 4;
 
     const secretIndex = getRandomBytes32();
@@ -55,11 +56,11 @@ async function testNZCPPubIdentity(cir, passURI, isLive, maxLen) {
     const out = witness.slice(1, 5);
     const bits = chunksToBits(out, 248);
 
-    const nullifierRangeBits = bits.slice(0, 512)
-    const toBeSignedHashBits = bits.slice(512, 512 + SHA256_BITS);
-    const nbfBits = bits.slice(512 + SHA256_BITS, 512 + SHA256_BITS + TIMESTAMP_BITS);
-    const expBits = bits.slice(512 + SHA256_BITS + TIMESTAMP_BITS, 512 + SHA256_BITS + 2 * TIMESTAMP_BITS);
-    const dataBits = bits.slice(512 + SHA256_BITS + 2 * TIMESTAMP_BITS);
+    const nullifierRangeBits = bits.slice(0, SHA512_BITS)
+    const toBeSignedHashBits = bits.slice(SHA512_BITS, SHA512_BITS + SHA256_BITS);
+    const nbfBits = bits.slice(SHA512_BITS + SHA256_BITS, SHA512_BITS + SHA256_BITS + TIMESTAMP_BITS);
+    const expBits = bits.slice(SHA512_BITS + SHA256_BITS + TIMESTAMP_BITS, SHA512_BITS + SHA256_BITS + 2 * TIMESTAMP_BITS);
+    const dataBits = bits.slice(SHA512_BITS + SHA256_BITS + 2 * TIMESTAMP_BITS);
     
 
     const nullifierRange = bitArrayToNum(nullifierRangeBits);
