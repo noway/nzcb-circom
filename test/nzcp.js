@@ -51,8 +51,8 @@ async function testNZCPPubIdentity(cir, passURI, isLive, maxLen) {
 
     const nullifierHashPart = new Uint8Array([...Array.from(out0), out1[0]])
     const toBeSignedHash = new Uint8Array([...Array.from(out1).slice(1), out2[0], out2[1]])
-    const nbfBytes = new Uint8Array([out2[2], out2[3], out2[4], out2[5]])
-    const expBytes = new Uint8Array([out2[6], out2[7], out2[8], out2[9]])
+    const nbfBytes = bitArrayToBuffer(evmRearrangeBits(bufferToBitArray([out2[5], out2[4], out2[3], out2[2]])))
+    const expBytes = bitArrayToBuffer(evmRearrangeBits(bufferToBitArray([out2[9], out2[8], out2[7], out2[6]])))
     const data = new Uint8Array(Array.from(out2).slice(10))
     console.log('nullifierHashPart', nullifierHashPart)
     console.log('toBeSignedHash', toBeSignedHash)
