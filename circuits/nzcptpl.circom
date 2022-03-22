@@ -505,7 +505,6 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     // i/o signals
     signal input toBeSigned[MaxToBeSignedBits]; // gets zero-outted beyond length
     signal input toBeSignedLen; // length of toBeSigned in bytes
-    signal input secretIndex[NULLIFIFER_HASH_HALF_BITS]; // secretIndex in the nullifierRange where nullifierHash resides. Provided as bits.
     signal input data[DataLen]; // extra pass-thru data for various purposes, fill with 0s of not needed
     signal output out[OUT_SIGNALS];
 
