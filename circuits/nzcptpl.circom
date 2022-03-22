@@ -638,7 +638,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
 
     // pack nullifier hash part
     // here and below:
-    // rearrange bits so it's cheaper to read in solidity
+    // rearrange bits so it is cheaper to read in solidity
     for(var k = 0; k < CHUNK_BYTES; k++) {
         var b = CHUNK_BYTES - 1 - k;
         for (var i = 0; i < BYTE_BITS; i++) {
