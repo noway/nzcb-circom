@@ -2,13 +2,9 @@ const crypto = require("crypto");
 const { assert } = require("chai");
 const { wasm: wasm_tester } = require("circom_tester");
 const { verifyPassURIOffline, DID_DOCUMENTS } = require("@vaxxnz/nzcp");
-const { bufferToBitArray, bitArrayToBuffer, bufferToBytes, chunksToBits, bitArrayToNum, fitBytes, toHexString } = require("./helpers/utils");
+const { bufferToBitArray, bitArrayToBuffer, bufferToBytes, chunksToBits, bitArrayToNum, fitBytes } = require("./helpers/utils");
 const { getCOSE, encodeToBeSigned } = require('./helpers/nzcp');
-const { encodeUint, padArray, stringToArray } = require('./helpers/cbor');
-const buildPedersenHash = require("circomlibjs").buildPedersenHash;
-const buildBabyJub = require("circomlibjs").buildBabyjub;
-const Scalar = require("ffjavascript").Scalar;
-const F1Field = require("ffjavascript").F1Field;
+const { padArray, stringToArray } = require('./helpers/cbor');
 
 require('dotenv').config()
 
