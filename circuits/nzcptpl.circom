@@ -632,20 +632,36 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     outB2n[1] = Bits2Num(CHUNK_BITS);
     outB2n[2] = Bits2Num(CHUNK_BITS);
 
+    var BYTE_LEN = 8;
+
     // pack nullifier hash part
-    for(var k = 0; k < CHUNK_BITS; k++) {
-        outB2n[0].in[k] <== nullifierSha512.out[k];
+    // here and below:
+    // rearrange bits so it's cheaper to read in solidity
+    for(var k = 0; k < CHUNK_BITS / BYTE_LEN; k++) {
+        var b = CHUNK_BITS / BYTE_LEN - 1 - k;
+        for (var i = 0; i < BYTE_LEN; i++) {
+            outB2n[0].in[b * BYTE_LEN + (7 - i)] <== nullifierSha512.out[k * BYTE_LEN + i];
+        }
     }
-    for(var k = 0; k < 8; k++) {
-        outB2n[1].in[k] <== nullifierSha512.out[CHUNK_BITS + k];
+    for(var k = 0; k < 8 / BYTE_LEN; k++) {
+        var b = CHUNK_BITS / BYTE_LEN - 1 - k;
+        for (var i = 0; i < BYTE_LEN; i++) {
+            outB2n[1].in[b * BYTE_LEN + (7 - i)] <== nullifierSha512.out[CHUNK_BITS + (k * BYTE_LEN + i)];
+        }
     }
 
     // pack ToBeSigned sha256
-    for(var k = 8; k < CHUNK_BITS; k++) {
-        outB2n[1].in[k] <== tbsSha256.out[k - 8];
+    for(var k = 1; k < CHUNK_BITS / BYTE_LEN; k++) {
+        var b = CHUNK_BITS / BYTE_LEN - 1 - k;
+        for (var i = 0; i < BYTE_LEN; i++) {
+            outB2n[1].in[b * BYTE_LEN + (7 - i)] <== tbsSha256.out[(k * BYTE_LEN + i) - 8];
+        }
     }
-    for(var k = 0; k < 16; k++) {
-        outB2n[2].in[k] <== tbsSha256.out[CHUNK_BITS + k - 8];
+    for(var k = 0; k < 16 / BYTE_LEN; k++) {
+        var b = CHUNK_BITS / BYTE_LEN - 1 - k;
+        for (var i = 0; i < BYTE_LEN; i++) {
+            outB2n[2].in[b * BYTE_LEN + (7 - i)] <== tbsSha256.out[CHUNK_BITS + (k * BYTE_LEN + i) - 8];
+        }
     }
 
     // Pack nbf
