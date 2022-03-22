@@ -1,4 +1,4 @@
-.PHONY: circuits/nzcp.circom circuits/cbor.circom test clean ceremony
+.PHONY: circuits/nzcp.circom circuits/cbor.circom test clean phase1 phase2
 
 all: node_modules circuits/nzcp.circom circuits/nzcp_example.wasm circuits/nzcp_live.wasm
 
