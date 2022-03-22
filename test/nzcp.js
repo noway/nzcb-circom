@@ -28,11 +28,11 @@ async function getNZCPPubIdentity(passURI, secretIndex, isLive) {
     const toBeSigned = encodeToBeSigned(cose.bodyProtected, cose.payload);
     const nullifierBytes = fitBytes(new TextEncoder().encode(nullifier), 64);
     const nullifierHash = crypto.createHash('sha512').update(nullifierBytes).digest('bytes')
-    const nullififerRange = bitArrayToNum(bufferToBitArray(nullifierHash)) + bitArrayToNum(bufferToBitArray(secretIndex))
+    const nullifierHashPart = nullifierHash.slice(0, 32);
     const toBeSignedHash = crypto.createHash('sha256').update(toBeSigned).digest('hex')
     const nbf = verificationResult.raw.nbf
     const exp = verificationResult.raw.exp
-    const pubIdentity = { nullififerRange, toBeSignedHash, nbf, exp };
+    const pubIdentity = { nullifierHashPart, toBeSignedHash, nbf, exp };
     console.log('nullifier', nullifier);
     console.log('pubIdentity', pubIdentity);
     return pubIdentity;
@@ -46,11 +46,11 @@ async function testNZCPPubIdentity(cir, passURI, isLive, maxLen) {
     const secretIndex = getRandomBytes32();
     const expected = await getNZCPPubIdentity(passURI, secretIndex, isLive);
 
-    const passThruData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14]);
+    const passThruData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15]);
     const cose = getCOSE(passURI);
     const toBeSigned = encodeToBeSigned(cose.bodyProtected, cose.payload);
     const fittedToBeSigned = fitBytes(toBeSigned, maxLen);
-    const input = { toBeSigned: bufferToBitArray(fittedToBeSigned), toBeSignedLen: toBeSigned.length, data: bufferToBitArray(passThruData), secretIndex: bufferToBitArray(secretIndex) };
+    const input = { toBeSigned: bufferToBitArray(fittedToBeSigned), toBeSignedLen: toBeSigned.length, data: bufferToBitArray(passThruData) };
     const witness = await cir.calculateWitness(input, true);
 
     const out = witness.slice(1, 5);
