@@ -6,7 +6,6 @@ include "../sha256-var-circom-main/snark-jwt-verify/circomlib/circuits/pedersen.
 include "../sha256-var-circom-main/circuits/sha256Var.circom";
 include "../sha512-master/circuits/sha512/sha512.circom";
 include "./cbor.circom";
-include "./binadd.circom";
 
 /* CBOR types */
 #define MAJOR_TYPE_INT 0
@@ -622,14 +621,6 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     component nullifierSha512 = Sha512(NULLIFIFER_BITS);
     for (var i = 0; i < NULLIFIFER_BITS; i++) {
         nullifierSha512.in[i] <== nullifierBits[i];
-    }
-
-    // add secretIndex to nullifierHash to get nullifierRange
-    // sum the bit nullifier hash bit array with secretIndex bit array
-    component binadd = BinAdd(NULLIFIFER_HASH_HALF_BITS * 2);
-    for (var i = 0; i < NULLIFIFER_HASH_HALF_BITS * 2; i++) {
-        binadd.op1[i] <== nullifierSha512.out[i];
-        binadd.op2[i] <== i < NULLIFIFER_HASH_HALF_BITS ? secretIndex[i] : 0;
     }
 
     // export
