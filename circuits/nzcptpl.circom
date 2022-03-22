@@ -2,7 +2,6 @@ pragma circom 2.0.3;
 
 include "../sha256-var-circom-main/snark-jwt-verify/circomlib/circuits/gates.circom";
 include "../sha256-var-circom-main/snark-jwt-verify/circomlib/circuits/comparators.circom";
-include "../sha256-var-circom-main/snark-jwt-verify/circomlib/circuits/pedersen.circom";
 include "../sha256-var-circom-main/circuits/sha256Var.circom";
 include "../sha512-master/circuits/sha512/sha512.circom";
 include "./cbor.circom";
