@@ -639,50 +639,45 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     component n2bExp = Num2Bits(TIMESTAMP_BITS);
     n2bExp.in <== exp;
 
-    component outB2n[4]; // we output 4 signals
-    outB2n[0] = Bits2Num(CHUNK_BITS);
-    outB2n[1] = Bits2Num(CHUNK_BITS);
-    outB2n[2] = Bits2Num(CHUNK_BITS);
-    outB2n[3] = Bits2Num(CHUNK_BITS);
+    component outB2n[3];
+    outB2n[0] = Bits2Num(CHUNK_LEN_BITS);
+    outB2n[1] = Bits2Num(CHUNK_LEN_BITS);
+    outB2n[2] = Bits2Num(CHUNK_LEN_BITS);
 
-    // pack nullifierRange
-    for (var i = 0; i < CHUNK_BITS; i++) {
-        outB2n[0].in[i] <== binadd.out[i];
+    // pack nullifier part
+    for(var k = 0; k < CHUNK_LEN_BITS; k++) {
+        outB2n[0].in[k] <== nullifierSha512.out[k];
     }
-    for (var i = 0; i < CHUNK_BITS; i++) {
-        outB2n[1].in[i] <== binadd.out[i + CHUNK_BITS];
-    }
-    for (var i = 0; i < 16; i++) {
-        outB2n[2].in[i] <== binadd.out[i + CHUNK_BITS + CHUNK_BITS];
+    for(var k = 0; k < 8; k++) {
+        outB2n[1].in[k] <== nullifierSha512.out[CHUNK_LEN_BITS + k];
     }
 
     // pack ToBeSigned sha256
-    for(var i = 16; i < CHUNK_BITS; i++) {
-        outB2n[2].in[i] <== tbsSha256.out[i - 16];
+    for(var k = 8; k < CHUNK_LEN_BITS; k++) {
+        outB2n[1].in[k] <== tbsSha256.out[k - 8];
     }
-    for(var i = 0; i < 24; i++) {
-        outB2n[3].in[i] <== tbsSha256.out[i + 232];
+    for(var k = 0; k < 16; k++) {
+        outB2n[2].in[k] <== tbsSha256.out[CHUNK_LEN_BITS + k - 8];
     }
 
     // Pack nbf
-    for(var i = 24; i < 24 + TIMESTAMP_BITS; i++) {
-        outB2n[3].in[i] <== n2bNbf.out[i - 24];
+    for(var k = 16; k < 16 + TIMESTAMP_BITS; k++) {
+        outB2n[2].in[k] <== n2bNbf.out[k - 16];
     }
 
     // Pack exp
-    for(var i = 24 + TIMESTAMP_BITS; i < 24 + 2 * TIMESTAMP_BITS; i++) {
-        outB2n[3].in[i] <== n2bExp.out[i - 24 - TIMESTAMP_BITS];
+    for(var k = 16 + TIMESTAMP_BITS; k < 16 + 2 * TIMESTAMP_BITS; k++) {
+        outB2n[2].in[k] <== n2bExp.out[k - 16 - TIMESTAMP_BITS];
     }
 
     // Pack the pass-thru data
-    for(var i = 24 + 2 * TIMESTAMP_BITS; i < CHUNK_BITS; i++) {
-        outB2n[3].in[i] <== data[i - (24 + 2 * TIMESTAMP_BITS)];
+    for(var k = 16 + 2 * TIMESTAMP_BITS; k < CHUNK_LEN_BITS; k++) {
+        outB2n[2].in[k] <== data[k - (16 + 2 * TIMESTAMP_BITS)];
     }
 
     out[0] <== outB2n[0].out;
     out[1] <== outB2n[1].out;
     out[2] <== outB2n[2].out;
-    out[3] <== outB2n[3].out;
 }
 
 
