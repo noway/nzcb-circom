@@ -632,7 +632,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     outB2n[1] = Bits2Num(CHUNK_BITS);
     outB2n[2] = Bits2Num(CHUNK_BITS);
 
-    // pack nullifier part
+    // pack nullifier hash part
     for(var k = 0; k < CHUNK_BITS; k++) {
         outB2n[0].in[k] <== nullifierSha512.out[k];
     }
