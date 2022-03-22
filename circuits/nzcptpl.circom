@@ -614,10 +614,8 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
 
     // calculate nullifierHash of the nullifer using pedersen hash
     // nullifier = `${givenName},${familyName},${dob}`
-    // nullifierHash = Pedersen(nullifier)
-    // nullifierRange = nullifierHash + secretIndex
-    // In the contract, we will be checking that nullifierHash is within (nullifierRange - 2^256, nullifierRange]
-    signal nullifierRange[2];
+    // nullifierHash = Sha512(nullifier)
+    // we only export 256 first bits of nullifier hash thus protecting nullifier privacy
     component nullifierSha512 = Sha512(NULLIFIFER_BITS);
     for (var i = 0; i < NULLIFIFER_BITS; i++) {
         nullifierSha512.in[i] <== nullifierBits[i];
