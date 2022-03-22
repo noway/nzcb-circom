@@ -68,6 +68,18 @@ function toHexString(byteArray) {
   }).join('')
 }
 
+function evmRearrangeBits(bitArray) {
+    const res = []
+    const BYTE_LEN = 8;
+    for (let k = 0; k < bitArray.length / BYTE_LEN; k++) {
+        const b = bitArray.length / BYTE_LEN - 1 - k;
+        for (let i = 0; i < BYTE_LEN; i++) {
+            res[b * BYTE_LEN + (7 - i)] = bitArray[k * BYTE_LEN + i];
+        }
+    }
+    return res;
+}
+
 module.exports = {
     bufferToBitArray,
     bitArrayToBuffer,
@@ -77,4 +89,5 @@ module.exports = {
     fitBytes,
     bitArrayToNum,
     toHexString,
+    evmRearrangeBits,
 }
