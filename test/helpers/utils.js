@@ -29,14 +29,19 @@ function bufferToBytes(b) {
 }
 
 function chunksToBits(chunks, chunkSize) {
-    const bits = new Uint8Array(chunks.length * chunkSize);
+    let bits = [];
     for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
-        for (let j = 0; j < chunkSize; j++) {
-            const bitIdx = i * chunkSize + j;
-            const byte = (chunk >> BigInt(j)) & 1n;
-            bits[bitIdx] = Number(byte);
-        }
+        bits = [...bits, ...chunkToBits(chunk, chunkSize)]
+    }
+    return new Uint8Array(bits);
+}
+
+function chunkToBits(chunk, chunkSize) {
+    const bits = [];
+    for (let j = 0; j < chunkSize; j++) {
+        const byte = (chunk >> BigInt(j)) & 1n;
+        bits.push(Number(byte));
     }
     return bits
 }
@@ -68,6 +73,7 @@ module.exports = {
     bitArrayToBuffer,
     bufferToBytes,
     chunksToBits,
+    chunkToBits,
     fitBytes,
     bitArrayToNum,
     toHexString,
