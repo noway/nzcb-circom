@@ -627,24 +627,24 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     n2bExp.in <== exp;
 
     component outB2n[3];
-    outB2n[0] = Bits2Num(CHUNK_LEN_BITS);
-    outB2n[1] = Bits2Num(CHUNK_LEN_BITS);
-    outB2n[2] = Bits2Num(CHUNK_LEN_BITS);
+    outB2n[0] = Bits2Num(CHUNK_BITS);
+    outB2n[1] = Bits2Num(CHUNK_BITS);
+    outB2n[2] = Bits2Num(CHUNK_BITS);
 
     // pack nullifier part
-    for(var k = 0; k < CHUNK_LEN_BITS; k++) {
+    for(var k = 0; k < CHUNK_BITS; k++) {
         outB2n[0].in[k] <== nullifierSha512.out[k];
     }
     for(var k = 0; k < 8; k++) {
-        outB2n[1].in[k] <== nullifierSha512.out[CHUNK_LEN_BITS + k];
+        outB2n[1].in[k] <== nullifierSha512.out[CHUNK_BITS + k];
     }
 
     // pack ToBeSigned sha256
-    for(var k = 8; k < CHUNK_LEN_BITS; k++) {
+    for(var k = 8; k < CHUNK_BITS; k++) {
         outB2n[1].in[k] <== tbsSha256.out[k - 8];
     }
     for(var k = 0; k < 16; k++) {
-        outB2n[2].in[k] <== tbsSha256.out[CHUNK_LEN_BITS + k - 8];
+        outB2n[2].in[k] <== tbsSha256.out[CHUNK_BITS + k - 8];
     }
 
     // Pack nbf
@@ -658,7 +658,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     }
 
     // Pack the pass-thru data
-    for(var k = 16 + 2 * TIMESTAMP_BITS; k < CHUNK_LEN_BITS; k++) {
+    for(var k = 16 + 2 * TIMESTAMP_BITS; k < CHUNK_BITS; k++) {
         outB2n[2].in[k] <== data[k - (16 + 2 * TIMESTAMP_BITS)];
     }
 
