@@ -479,7 +479,8 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     var CLAIMS_SKIP_LIVE = 30;
     var CHUNK_BITS = 248;
     var OUT_SIGNALS = 3;
-    var TIMESTAMP_BITS = 8 * 4;
+    var TIMESTAMP_BYTES = 4;
+    var TIMESTAMP_BITS = 8 * TIMESTAMP_BYTES;
 
     // concat string aka the nullifier
     // Only 64 character latin strings are supported.
@@ -664,19 +665,35 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
         }
     }
 
+    var c;
     // Pack nbf
-    for(var k = 16; k < 16 + TIMESTAMP_BITS; k++) {
-        outB2n[2].in[k] <== n2bNbf.out[k - 16];
+    c = 0;
+    for(var k = 2; k < 2 + TIMESTAMP_BYTES; k++) {
+        var b = CHUNK_BITS / BYTE_LEN - 1 - k;
+        for (var i = 0; i < BYTE_LEN; i++) {
+            outB2n[2].in[b * BYTE_LEN + i] <== n2bNbf.out[c];
+            c++;
+        }
     }
 
     // Pack exp
-    for(var k = 16 + TIMESTAMP_BITS; k < 16 + 2 * TIMESTAMP_BITS; k++) {
-        outB2n[2].in[k] <== n2bExp.out[k - 16 - TIMESTAMP_BITS];
+    c = 0;
+    for(var k = 2 + TIMESTAMP_BYTES; k < 2 + 2 * TIMESTAMP_BYTES; k++) {
+        var b = CHUNK_BITS / BYTE_LEN - 1 - k;
+        for (var i = 0; i < BYTE_LEN; i++) {
+            outB2n[2].in[b * BYTE_LEN + i] <== n2bExp.out[c];
+            c++;
+        }
     }
 
     // Pack the pass-thru data
-    for(var k = 16 + 2 * TIMESTAMP_BITS; k < CHUNK_BITS; k++) {
-        outB2n[2].in[k] <== data[k - (16 + 2 * TIMESTAMP_BITS)];
+    c = 0;
+    for(var k = 2 + 2 * TIMESTAMP_BYTES; k < CHUNK_BITS / BYTE_LEN; k++) {
+        var b = CHUNK_BITS / BYTE_LEN - 1 - k;
+        for (var i = 0; i < BYTE_LEN; i++) {
+            outB2n[2].in[b * BYTE_LEN + i] <== data[c];
+            c++;
+        }
     }
 
     out[0] <== outB2n[0].out;
