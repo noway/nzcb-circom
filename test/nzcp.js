@@ -8,15 +8,7 @@ const { padArray, stringToArray } = require('./helpers/cbor');
 
 require('dotenv').config()
 
-
-// get a well distributed random field element in the domain of Z/pZ
-// this might return not perfectly well distributed random values, but it's within 1 bit of being well-distributed
-function getRandomBytes32() {
-    return crypto.randomBytes(32)
-}
-
-
-async function getNZCPPubIdentity(passURI, secretIndex, isLive) {
+async function getNZCPPubIdentity(passURI, isLive) {
     const verificationResult = verifyPassURIOffline(passURI, { didDocument: isLive ? DID_DOCUMENTS.MOH_LIVE : DID_DOCUMENTS.MOH_EXAMPLE })
     const { givenName, familyName, dob } = verificationResult.credentialSubject;
     const nullifier = `${givenName},${familyName},${dob}`
@@ -39,8 +31,7 @@ async function testNZCPPubIdentity(cir, passURI, isLive, maxLen) {
     const SHA256_BITS = 256;
     const TIMESTAMP_BITS = 8 * 4;
 
-    const secretIndex = getRandomBytes32();
-    const expected = await getNZCPPubIdentity(passURI, secretIndex, isLive);
+    const expected = await getNZCPPubIdentity(passURI, isLive);
 
     const passThruData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15]);
     const cose = getCOSE(passURI);
