@@ -472,6 +472,7 @@ template ConstructNullifier(MaxBufferLen) {
 // @param MaxCborMapLenCredSubj - maximum number of elements in the CBOR map for credential subject
 template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborMapLenVC, MaxCborArrayLenCredSubj, MaxCborMapLenCredSubj) {
     // constants
+    var HASHPART_BITS = 256;
     var SHA256_BITS = 256;
     var BLOCK_SIZE = 512;
     var CLAIMS_SKIP_EXAMPLE = 27;
@@ -489,7 +490,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     var NULLIFIFER_HASH_HALF_BITS = 256;
 
     // compile time parameters
-    var DataLen = CHUNK_BITS * OUT_SIGNALS - SHA256_BITS - TIMESTAMP_BITS * 2;
+    var DataLen = CHUNK_BITS * OUT_SIGNALS - HASHPART_BITS - SHA256_BITS - TIMESTAMP_BITS * 2;
     var ClaimsSkip = IsLive ? CLAIMS_SKIP_LIVE : CLAIMS_SKIP_EXAMPLE;
 
     // ToBeSigned hash
