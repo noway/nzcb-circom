@@ -80,6 +80,14 @@ function evmRearrangeBits(bitArray) {
     return res;
 }
 
+function evmBytesToNum(bytes) {
+    return bitArrayToNum(bufferToBitArray(bitArrayToBuffer(evmRearrangeBits(bufferToBitArray(bytes.reverse())))))
+}
+
+function evmRearrangeBytes(bytes) {
+    return bitArrayToBuffer(evmRearrangeBits(bufferToBitArray(bytes.reverse())))   
+}
+
 module.exports = {
     bufferToBitArray,
     bitArrayToBuffer,
@@ -90,4 +98,6 @@ module.exports = {
     bitArrayToNum,
     toHexString,
     evmRearrangeBits,
+    evmBytesToNum,
+    evmRearrangeBytes,
 }

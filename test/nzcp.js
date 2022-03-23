@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const { assert } = require("chai");
 const { wasm: wasm_tester } = require("circom_tester");
 const { verifyPassURIOffline, DID_DOCUMENTS } = require("@vaxxnz/nzcp");
-const { bufferToBitArray, bitArrayToBuffer, bufferToBytes, chunksToBits, chunkToBits, bitArrayToNum, fitBytes, evmRearrangeBits } = require("./helpers/utils");
+const { bufferToBitArray, bitArrayToBuffer, bufferToBytes, chunksToBits, chunkToBits, bitArrayToNum, fitBytes, evmRearrangeBits, evmRearrangeBytes, evmBytesToNum } = require("./helpers/utils");
 const { getCOSE, encodeToBeSigned } = require('./helpers/nzcp');
 const { padArray, stringToArray } = require('./helpers/cbor');
 
@@ -33,11 +33,12 @@ async function testNZCPPubIdentity(cir, passURI, isLive, maxLen) {
 
     const expected = await getNZCPPubIdentity(passURI, isLive);
 
-    const passThruData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15]);
+    const origData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15]);
+    const passThroughData = evmRearrangeBytes(origData)
     const cose = getCOSE(passURI);
     const toBeSigned = encodeToBeSigned(cose.bodyProtected, cose.payload);
     const fittedToBeSigned = fitBytes(toBeSigned, maxLen);
-    const input = { toBeSigned: bufferToBitArray(fittedToBeSigned), toBeSignedLen: toBeSigned.length, data: bufferToBitArray(passThruData) };
+    const input = { toBeSigned: bufferToBitArray(fittedToBeSigned), toBeSignedLen: toBeSigned.length, data: bufferToBitArray(passThroughData) };
     const witness = await cir.calculateWitness(input, true);
 
     const out = witness.slice(1, 4);
@@ -51,9 +52,10 @@ async function testNZCPPubIdentity(cir, passURI, isLive, maxLen) {
 
     const nullifierHashPart = new Uint8Array([...Array.from(out0), out1[0]])
     const toBeSignedHash = new Uint8Array([...Array.from(out1).slice(1), out2[0], out2[1]])
-    const nbfBytes = bitArrayToBuffer(evmRearrangeBits(bufferToBitArray([out2[5], out2[4], out2[3], out2[2]])))
-    const expBytes = bitArrayToBuffer(evmRearrangeBits(bufferToBitArray([out2[9], out2[8], out2[7], out2[6]])))
-    const data = bitArrayToBuffer(evmRearrangeBits(bufferToBitArray(Array.from(out2).slice(10).reverse())))
+    const nbfBytes = new Uint8Array([out2[2], out2[3], out2[4], out2[5]])
+    const expBytes = new Uint8Array([out2[6], out2[7], out2[8], out2[9]])
+    // const data = bitArrayToBuffer(evmRearrangeBits(bufferToBitArray(Array.from(out2).slice(10).reverse())))
+    const data = out2.slice(10).reverse()
     console.log('nullifierHashPart', nullifierHashPart)
     console.log('toBeSignedHash', toBeSignedHash)
     
@@ -61,13 +63,13 @@ async function testNZCPPubIdentity(cir, passURI, isLive, maxLen) {
     assert.deepEqual(nullifierHashPart, expected.nullifierHashPart);
     assert.deepEqual(toBeSignedHash, expected.toBeSignedHash);
 
-    const nbf = bitArrayToNum(bufferToBitArray(nbfBytes));
+    const nbf = evmBytesToNum(nbfBytes);
     assert.equal(nbf, expected.nbf)
 
-    const exp = bitArrayToNum(bufferToBitArray(expBytes));
+    const exp = evmBytesToNum(expBytes);
     assert.equal(exp, expected.exp)
 
-    assert.deepEqual(data, passThruData);
+    assert.deepEqual(data, origData);
 }
 
 const EXAMPLE_PASS_URI = "NZCP:/1/2KCEVIQEIVVWK6JNGEASNICZAEP2KALYDZSGSZB2O5SWEOTOPJRXALTDN53GSZBRHEXGQZLBNR2GQLTOPICRUYMBTIFAIGTUKBAAUYTWMOSGQQDDN5XHIZLYOSBHQJTIOR2HA4Z2F4XXO53XFZ3TGLTPOJTS6MRQGE4C6Y3SMVSGK3TUNFQWY4ZPOYYXQKTIOR2HA4Z2F4XW46TDOAXGG33WNFSDCOJONBSWC3DUNAXG46RPMNXW45DFPB2HGL3WGFTXMZLSONUW63TFGEXDALRQMR2HS4DFQJ2FMZLSNFTGSYLCNRSUG4TFMRSW45DJMFWG6UDVMJWGSY2DN53GSZCQMFZXG4LDOJSWIZLOORUWC3CTOVRGUZLDOSRWSZ3JOZSW4TTBNVSWISTBMNVWUZTBNVUWY6KOMFWWKZ2TOBQXE4TPO5RWI33CNIYTSNRQFUYDILJRGYDVAYFE6VGU4MCDGK7DHLLYWHVPUS2YIDJOA6Y524TD3AZRM263WTY2BE4DPKIF27WKF3UDNNVSVWRDYIYVJ65IRJJJ6Z25M2DO4YZLBHWFQGVQR5ZLIWEQJOZTS3IQ7JTNCFDX";
