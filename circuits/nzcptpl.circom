@@ -695,12 +695,15 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
 
     // Pack the pass-thru data
     c = 0;
+    idx = 0;
     for(var k = 2 + 2 * TIMESTAMP_BYTES; k < CHUNK_BYTES; k++) {
         var b = CHUNK_BYTES - 1 - k;
+        var d = (DataLen / BYTE_BITS) - 1 - idx;
         for (var i = 0; i < BYTE_BITS; i++) {
-            outB2n[2].in[b * BYTE_BITS + i] <== data[c];
+            outB2n[2].in[b * BYTE_BITS + i] <== data[d * BYTE_BITS + i];
             c++;
         }
+        idx++;
     }
 
     out[0] <== outB2n[0].out;

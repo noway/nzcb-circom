@@ -85,7 +85,7 @@ function evmBytesToNum(bytes) {
 }
 
 function evmRearrangeBytes(bytes) {
-    return bitArrayToBuffer(evmRearrangeBits(bufferToBitArray(bytes.reverse())))   
+    return bitArrayToBuffer(evmRearrangeBits(bufferToBitArray(bytes)))   
 }
 
 module.exports = {
