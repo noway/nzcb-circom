@@ -81,7 +81,7 @@ function evmRearrangeBits(bitArray) {
 }
 
 function evmBytesToNum(bytes) {
-    return bitArrayToNum(bufferToBitArray(bitArrayToBuffer(evmRearrangeBits(bufferToBitArray(bytes.reverse())))))
+    return bitArrayToNum(bufferToBitArray(bitArrayToBuffer(evmRearrangeBits(bufferToBitArray(bytes)))))
 }
 
 function evmRearrangeBytes(bytes) {
