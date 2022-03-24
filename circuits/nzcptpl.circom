@@ -666,24 +666,31 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     }
 
     var c;
+    var idx;
     // Pack nbf
     c = 0;
+    idx = 0;
     for(var k = 2; k < 2 + TIMESTAMP_BYTES; k++) {
         var b = CHUNK_BYTES - 1 - k;
+        var d = TIMESTAMP_BYTES - 1 - idx;
         for (var i = 0; i < BYTE_BITS; i++) {
-            outB2n[2].in[b * BYTE_BITS + i] <== n2bNbf.out[c];
+            outB2n[2].in[b * BYTE_BITS + i] <== n2bNbf.out[d * BYTE_BITS + i];
             c++;
         }
+        idx++;
     }
 
     // Pack exp
     c = 0;
+    idx = 0;
     for(var k = 2 + TIMESTAMP_BYTES; k < 2 + 2 * TIMESTAMP_BYTES; k++) {
         var b = CHUNK_BYTES - 1 - k;
+        var d = TIMESTAMP_BYTES - 1 - idx;
         for (var i = 0; i < BYTE_BITS; i++) {
-            outB2n[2].in[b * BYTE_BITS + i] <== n2bExp.out[c];
+            outB2n[2].in[b * BYTE_BITS + i] <== n2bExp.out[d * BYTE_BITS + i];
             c++;
         }
+        idx++;
     }
 
     // Pack the pass-thru data
