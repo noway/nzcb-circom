@@ -91,12 +91,9 @@ async function testFindCWTClaims(cir, passURI, isLive, pos, maxLen, expectedVCPo
     const actualVCPos = Number(witness[1]);
     assert.equal(actualVCPos, expectedVCPos);
 
-    const actualNbf = Number(witness[2]);
-    const actualExp = Number(witness[3]);
+    const actualExp = Number(witness[2]);
 
-    assert.equal(actualNbf, nbf);
     assert.equal(actualExp, exp);
-
 }
 describe("NZCP find CWT claims - example pass", function () {
     this.timeout(100000);
