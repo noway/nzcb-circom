@@ -33,7 +33,7 @@ async function testNZCPPubIdentity(cir, passURI, isLive, maxLen) {
 
     const expected = await getNZCPPubIdentity(passURI, isLive);
 
-    const origData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15]);
+    const origData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19]);
     const passThroughData = evmRearrangeBytes(origData)
     const cose = getCOSE(passURI);
     const toBeSigned = encodeToBeSigned(cose.bodyProtected, cose.payload);
@@ -52,19 +52,15 @@ async function testNZCPPubIdentity(cir, passURI, isLive, maxLen) {
 
     const nullifierHashPart = new Uint8Array([...Array.from(out0), out1[0]])
     const toBeSignedHash = new Uint8Array([...Array.from(out1).slice(1), out2[0], out2[1]])
-    const nbfBytes = new Uint8Array([out2[2], out2[3], out2[4], out2[5]])
-    const expBytes = new Uint8Array([out2[6], out2[7], out2[8], out2[9]])
-    // const data = bitArrayToBuffer(evmRearrangeBits(bufferToBitArray(Array.from(out2).slice(10).reverse())))
-    const data = out2.slice(10)
+    const expBytes = new Uint8Array([out2[2], out2[3], out2[4], out2[5]])
+
+    const data = out2.slice(6)
     console.log('nullifierHashPart', nullifierHashPart)
     console.log('toBeSignedHash', toBeSignedHash)
     
 
     assert.deepEqual(nullifierHashPart, expected.nullifierHashPart);
     assert.deepEqual(toBeSignedHash, expected.toBeSignedHash);
-
-    const nbf = evmBytesToNum(nbfBytes);
-    assert.equal(nbf, expected.nbf)
 
     const exp = evmBytesToNum(expBytes);
     assert.equal(exp, expected.exp)
