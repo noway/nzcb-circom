@@ -530,13 +530,11 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     readMapLengthClaims.pos <== ClaimsSkip;
 
     // find "vc" key pos in the map
-    signal nbf;
     signal exp;
     component findVC = FindCWTClaims(MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborMapLenVC);
     copyBytes(ToBeSigned, findVC.bytes, MaxToBeSignedBytes)
     findVC.pos <== readMapLengthClaims.nextPos;
     findVC.mapLen <== readMapLengthClaims.len;
-    nbf <== findVC.nbf;
     exp <== findVC.exp;
 
 
@@ -594,9 +592,6 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     }
 
     // export
-    component n2bNbf = Num2Bits(TIMESTAMP_BITS);
-    n2bNbf.in <== nbf;
-
     component n2bExp = Num2Bits(TIMESTAMP_BITS);
     n2bExp.in <== exp;
 
