@@ -41,7 +41,6 @@ template FindCWTClaims(BytesLen, MaxCborArrayLen, MaxCborMapLen) {
     signal input pos;
 
     signal output vcPos;
-    signal output nbf;
     signal output exp;
 
     // signals
@@ -49,10 +48,8 @@ template FindCWTClaims(BytesLen, MaxCborArrayLen, MaxCborMapLen) {
     signal type[MaxCborMapLen];
     signal value[MaxCborMapLen];
     signal isNeedle[MaxCborMapLen];
-    signal isNbf[MaxCborMapLen];
     signal isExp[MaxCborMapLen];
     signal isAccepted[MaxCborMapLen];
-    signal isNbfAccepted[MaxCborMapLen];
     signal isExpAccepted[MaxCborMapLen];
 
     component readType[MaxCborMapLen];
@@ -62,12 +59,10 @@ template FindCWTClaims(BytesLen, MaxCborArrayLen, MaxCborMapLen) {
     component isString[MaxCborMapLen];
     component isInt[MaxCborMapLen];
     component isNeedleString[MaxCborMapLen];
-    component is5Int[MaxCborMapLen];
     component is4Int[MaxCborMapLen];
     component withinMapLen[MaxCborMapLen];
 
     component foundPosTally = CalculateTotal(MaxCborMapLen);
-    component nbfPosTally = CalculateTotal(MaxCborMapLen);
     component expPosTally = CalculateTotal(MaxCborMapLen);
 
     for (var k = 0; k < MaxCborMapLen; k++) { 
@@ -107,11 +102,6 @@ template FindCWTClaims(BytesLen, MaxCborArrayLen, MaxCborMapLen) {
         isNeedleString[k].pos <== decodeUint[k].nextPos; // pos before skipping
         isNeedleString[k].len <== value[k];
 
-        // is current value interpreted as an integer is a 1 number?
-        is5Int[k] = IsEqual();
-        is5Int[k].in[0] <== 5;
-        is5Int[k].in[1] <== value[k]; // pos before skipping
-
         // is current value interpreted as an integer is a 4 number?
         is4Int[k] = IsEqual();
         is4Int[k].in[0] <== 4;
@@ -125,42 +115,23 @@ template FindCWTClaims(BytesLen, MaxCborArrayLen, MaxCborMapLen) {
         // is current value a "vc" string?
         isNeedle[k] <== isString[k].out * isNeedleString[k].out;
 
-        // is current value a 1 int?
-        isNbf[k] <== isInt[k].out * is5Int[k].out;
-
         // is current value a 4 int?
         isExp[k] <== isInt[k].out * is4Int[k].out;
 
         // should we select this vc pos candidate?
         isAccepted[k] <== isNeedle[k] * withinMapLen[k].out;
 
-        // should we select this nbf candidate?
-        isNbfAccepted[k] <== isNbf[k] * withinMapLen[k].out;
-
         // should we select this exp candidate?
         isExpAccepted[k] <== isExp[k] * withinMapLen[k].out;
 
         // put a vc pos candidate into CalculateTotal to be able to get vc pos outside of the loop
         foundPosTally.nums[k] <== isAccepted[k] * (decodeUint[k].nextPos + value[k]);
-
-        // put a nbfPos candidate into CalculateTotal to be able to get nbf pos outside of the loop
-        nbfPosTally.nums[k] <== isNbfAccepted[k] * decodeUint[k].nextPos;
         
         // put a expPos candidate into CalculateTotal to be able to get exp pos outside of the loop
         expPosTally.nums[k] <== isExpAccepted[k] * decodeUint[k].nextPos;
     }
 
     vcPos <== foundPosTally.sum;
-
-    // read nbf field in the map
-    component nbfReadType = ReadType(BytesLen);
-    copyBytes(bytes, nbfReadType.bytes, BytesLen)
-    nbfReadType.pos <== nbfPosTally.sum;
-    component nbfDecodeUint = DecodeUint(BytesLen);
-    nbfDecodeUint.v <== nbfReadType.v;
-    copyBytes(bytes, nbfDecodeUint.bytes, BytesLen)
-    nbfDecodeUint.pos <== nbfReadType.nextPos;
-    nbf <== nbfDecodeUint.value;
 
     // read exp field in the map
     component expReadType = ReadType(BytesLen);
