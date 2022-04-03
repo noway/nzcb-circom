@@ -383,12 +383,12 @@ template StringEquals(BytesLen, ConstBytes, ConstBytesLen) {
     signal output out;
 
     // check if length matches
-    // component isSameLen = IsEqual();
-    // isSameLen.in[0] <== len;
-    // isSameLen.in[1] <== ConstBytesLen;
+    component isSameLen = IsEqual();
+    isSameLen.in[0] <== len;
+    isSameLen.in[1] <== ConstBytesLen;
 
     // compare every character
-    var conditionsSum = 0;
+    var conditionsSum = isSameLen.out;
     component isEqual[ConstBytesLen];
     component getV[ConstBytesLen];
     for (var i = 0; i < ConstBytesLen; i++) {
@@ -400,15 +400,14 @@ template StringEquals(BytesLen, ConstBytes, ConstBytesLen) {
         getV[i].pos <== pos + i;
         isEqual[i].in[1] <== getV[i].v;
 
-        conditionsSum = conditionsSum + 1;
+        conditionsSum = conditionsSum + isEqual[i].out;
     }
 
     // return
-    var allConditionsAreTrue = ConstBytesLen + 0;
-    component ie = IsEqual();
-    ie.in[0] <== allConditionsAreTrue;
-    ie.in[1] <== conditionsSum;
-    out <== ie.out;
+    var allConditionsAreTrue = ConstBytesLen + 1;
+    component isZero = IsZero();
+    isZero.in <== allConditionsAreTrue - conditionsSum;
+    out <== isZero.out;
 }
 
 // @dev reads CBOR string length

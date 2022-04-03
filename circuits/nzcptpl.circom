@@ -262,31 +262,31 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
 
     component readStringLength[CREDENTIAL_SUBJECT_MAP_LEN];
 
-    component isGivenName[1];
-    // component isFamilyName[CREDENTIAL_SUBJECT_MAP_LEN];
-    // component isDOB[CREDENTIAL_SUBJECT_MAP_LEN];
+    component isGivenName[CREDENTIAL_SUBJECT_MAP_LEN];
+    component isFamilyName[CREDENTIAL_SUBJECT_MAP_LEN];
+    component isDOB[CREDENTIAL_SUBJECT_MAP_LEN];
     component copyString[CREDENTIAL_SUBJECT_MAP_LEN];
 
-    for(var k = 0; k < 1; k++) {
+    for(var k = 0; k < CREDENTIAL_SUBJECT_MAP_LEN; k++) {
 
-        readStringLength[k] = ReadStringLength(1);
-        copyBytes(bytes, readStringLength[k].bytes, 1)
-        readStringLength[k].pos <== k == 0 ? pos : 0;
+        readStringLength[k] = ReadStringLength(BytesLen);
+        copyBytes(bytes, readStringLength[k].bytes, BytesLen)
+        readStringLength[k].pos <== k == 0 ? pos : copyString[k - 1].nextPos;
 
         isGivenName[k] = StringEquals(BytesLen, GIVEN_NAME_STR, GIVEN_NAME_LEN);
         copyBytes(bytes, isGivenName[k].bytes, BytesLen)
         isGivenName[k].pos <== readStringLength[k].nextPos; // pos before skipping
         isGivenName[k].len <== readStringLength[k].len;
 
-        // isFamilyName[k] = StringEquals(BytesLen, FAMILY_NAME_STR, FAMILY_NAME_LEN);
-        // copyBytes(bytes, isFamilyName[k].bytes, BytesLen)
-        // isFamilyName[k].pos <== readStringLength[k].nextPos; // pos before skipping
-        // isFamilyName[k].len <== readStringLength[k].len;
+        isFamilyName[k] = StringEquals(BytesLen, FAMILY_NAME_STR, FAMILY_NAME_LEN);
+        copyBytes(bytes, isFamilyName[k].bytes, BytesLen)
+        isFamilyName[k].pos <== readStringLength[k].nextPos; // pos before skipping
+        isFamilyName[k].len <== readStringLength[k].len;
 
-        // isDOB[k] = StringEquals(BytesLen, DOB_STR, DOB_LEN);
-        // copyBytes(bytes, isDOB[k].bytes, BytesLen)
-        // isDOB[k].pos <== readStringLength[k].nextPos; // pos before skipping
-        // isDOB[k].len <== readStringLength[k].len;
+        isDOB[k] = StringEquals(BytesLen, DOB_STR, DOB_LEN);
+        copyBytes(bytes, isDOB[k].bytes, BytesLen)
+        isDOB[k].pos <== readStringLength[k].nextPos; // pos before skipping
+        isDOB[k].len <== readStringLength[k].len;
 
         copyString[k] = CopyString(BytesLen, MaxStringLen);
         copyBytes(bytes, copyString[k].bytes, BytesLen)
@@ -294,17 +294,13 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
 
     }
 
-    var isGivenNameTmp = 1;
-    var isFamilyNameTmp = 1;
-    var isDOBTmp = 1;
-
 
     // assign givenName
     component givenNameCharTally[MaxStringLen];
     for(var h = 0; h<MaxStringLen; h++) {
         givenNameCharTally[h] = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
         for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
-            givenNameCharTally[h].nums[i] <== i == 0 ? (isGivenName[i].out * copyString[i].outbytes[h]) : 0;
+            givenNameCharTally[h].nums[i] <== isGivenName[i].out * copyString[i].outbytes[h];
         }
         givenName[h] <== givenNameCharTally[h].sum;
     }
@@ -312,7 +308,7 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
     component givenNameLenTally;
     givenNameLenTally = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
     for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
-        givenNameLenTally.nums[i] <== i == 0 ? (isGivenName[i].out * copyString[i].len) : 0;
+        givenNameLenTally.nums[i] <== isGivenName[i].out * copyString[i].len;
     }
     givenNameLen <== givenNameLenTally.sum;
 
@@ -322,7 +318,7 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
     for(var h = 0; h<MaxStringLen; h++) {
         familyNameCharTally[h] = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
         for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
-            familyNameCharTally[h].nums[i] <== i == 0 ? (isFamilyNameTmp * copyString[i].outbytes[h]) : 0;
+            familyNameCharTally[h].nums[i] <== isFamilyName[i].out * copyString[i].outbytes[h];
         }
         familyName[h] <== familyNameCharTally[h].sum;
     }
@@ -330,7 +326,7 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
     component familyNameLenTally;
     familyNameLenTally = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
     for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
-        familyNameLenTally.nums[i] <== i == 0 ? (isFamilyNameTmp * copyString[i].len) : 0;
+        familyNameLenTally.nums[i] <== isFamilyName[i].out * copyString[i].len;
     }
     familyNameLen <== familyNameLenTally.sum;
 
@@ -340,7 +336,7 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
     for(var h = 0; h<MaxStringLen; h++) {
         dobCharTally[h] = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
         for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
-            dobCharTally[h].nums[i] <== i == 0 ? (isDOBTmp * copyString[i].outbytes[h]) : 0;
+            dobCharTally[h].nums[i] <== isDOB[i].out * copyString[i].outbytes[h];
         }
         dob[h] <== dobCharTally[h].sum;
     }
@@ -348,7 +344,7 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
     component dobLenTally;
     dobLenTally = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
     for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
-        dobLenTally.nums[i] <== i == 0 ? (isDOBTmp * copyString[i].len) : 0;
+        dobLenTally.nums[i] <== isDOB[i].out * copyString[i].len;
     }
     dobLen <== dobLenTally.sum;
 
@@ -529,73 +525,71 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
         ToBeSigned[k] <== b2n[k].out * ltLen[k].out;
     }
 
-    // component readMapLengthClaims = ReadMapLength(MaxToBeSignedBytes);
-    // copyBytes(ToBeSigned, readMapLengthClaims.bytes, MaxToBeSignedBytes)
-    // readMapLengthClaims.pos <== ClaimsSkip;
+    component readMapLengthClaims = ReadMapLength(MaxToBeSignedBytes);
+    copyBytes(ToBeSigned, readMapLengthClaims.bytes, MaxToBeSignedBytes)
+    readMapLengthClaims.pos <== ClaimsSkip;
 
     // find "vc" key pos in the map
     signal exp;
-    // component findVC = FindCWTClaims(MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborMapLenVC);
-    // copyBytes(ToBeSigned, findVC.bytes, MaxToBeSignedBytes)
-    // findVC.pos <== readMapLengthClaims.nextPos;
-    // findVC.mapLen <== readMapLengthClaims.len;
-    exp <== 1951416330;
-    // log(findVC.exp);
-    // log(findVC.vcPos);
+    component findVC = FindCWTClaims(MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborMapLenVC);
+    copyBytes(ToBeSigned, findVC.bytes, MaxToBeSignedBytes)
+    findVC.pos <== readMapLengthClaims.nextPos;
+    findVC.mapLen <== readMapLengthClaims.len;
+    exp <== findVC.exp;
 
 
     // find credential subject
-    // component readMapLengthVC = ReadMapLength(MaxToBeSignedBytes);
-    // copyBytes(ToBeSigned, readMapLengthVC.bytes, MaxToBeSignedBytes)
-    // readMapLengthVC.pos <== 76;
+    component readMapLengthVC = ReadMapLength(MaxToBeSignedBytes);
+    copyBytes(ToBeSigned, readMapLengthVC.bytes, MaxToBeSignedBytes)
+    readMapLengthVC.pos <== findVC.vcPos;
 
-    // signal credSubjPos;
-    // component findCredSubj = FindCredSubj(MaxToBeSignedBytes, MaxCborArrayLenCredSubj, MaxCborMapLenCredSubj);
-    // copyBytes(ToBeSigned, findCredSubj.bytes, MaxToBeSignedBytes)
-    // findCredSubj.pos <== readMapLengthVC.nextPos;
-    // findCredSubj.mapLen <== readMapLengthVC.len;
-    // credSubjPos <== findCredSubj.needlePos;
+    signal credSubjPos;
+    component findCredSubj = FindCredSubj(MaxToBeSignedBytes, MaxCborArrayLenCredSubj, MaxCborMapLenCredSubj);
+    copyBytes(ToBeSigned, findCredSubj.bytes, MaxToBeSignedBytes)
+    findCredSubj.pos <== readMapLengthVC.nextPos;
+    findCredSubj.mapLen <== readMapLengthVC.len;
+    credSubjPos <== findCredSubj.needlePos;
 
     // read credential subject map length
-    // component readMapLengthCredSubj = ReadMapLength(MaxToBeSignedBytes);
-    // copyBytes(ToBeSigned, readMapLengthCredSubj.bytes, MaxToBeSignedBytes)
-    // readMapLengthCredSubj.pos <== credSubjPos;
+    component readMapLengthCredSubj = ReadMapLength(MaxToBeSignedBytes);
+    copyBytes(ToBeSigned, readMapLengthCredSubj.bytes, MaxToBeSignedBytes)
+    readMapLengthCredSubj.pos <== credSubjPos;
 
 
     // read credential subject map
     component readCredSubj = ReadCredSubj(MaxToBeSignedBytes, NULLIFIFER_BYTES);
     copyBytes(ToBeSigned, readCredSubj.bytes, MaxToBeSignedBytes)
-    readCredSubj.pos <== 247;
-    readCredSubj.mapLen <== 3;
+    readCredSubj.pos <== readMapLengthCredSubj.nextPos;
+    readCredSubj.mapLen <== readMapLengthCredSubj.len;
 
     // concat given name, family name and dob
-    // component nullifier = ConstructNullifier(NULLIFIFER_BYTES);
-    // nullifier.givenNameLen <== readCredSubj.givenNameLen;
-    // nullifier.familyNameLen <== readCredSubj.familyNameLen;
-    // nullifier.dobLen <== readCredSubj.dobLen;
-    // for (var i = 0; i < NULLIFIFER_BYTES; i++) { nullifier.givenName[i] <== readCredSubj.givenName[i]; }
-    // for (var i = 0; i < NULLIFIFER_BYTES; i++) { nullifier.familyName[i] <== readCredSubj.familyName[i]; }
-    // for (var i = 0; i < NULLIFIFER_BYTES; i++) { nullifier.dob[i] <== readCredSubj.dob[i]; }
+    component nullifier = ConstructNullifier(NULLIFIFER_BYTES);
+    nullifier.givenNameLen <== readCredSubj.givenNameLen;
+    nullifier.familyNameLen <== readCredSubj.familyNameLen;
+    nullifier.dobLen <== readCredSubj.dobLen;
+    for (var i = 0; i < NULLIFIFER_BYTES; i++) { nullifier.givenName[i] <== readCredSubj.givenName[i]; }
+    for (var i = 0; i < NULLIFIFER_BYTES; i++) { nullifier.familyName[i] <== readCredSubj.familyName[i]; }
+    for (var i = 0; i < NULLIFIFER_BYTES; i++) { nullifier.dob[i] <== readCredSubj.dob[i]; }
     
     // convert concat string into bits
-    // component n2bNullifier[NULLIFIFER_BYTES];
-    // signal nullifierBits[NULLIFIFER_BITS];
-    // for(var k = 0; k < NULLIFIFER_BYTES; k++) {
-    //     n2bNullifier[k] = Num2Bits(8);
-    //     n2bNullifier[k].in <== nullifier.result[k];
-    //     for (var j = 0; j < 8; j++) {
-    //         nullifierBits[k*8 + (7 - j)] <== n2bNullifier[k].out[j];
-    //     }
-    // }
+    component n2bNullifier[NULLIFIFER_BYTES];
+    signal nullifierBits[NULLIFIFER_BITS];
+    for(var k = 0; k < NULLIFIFER_BYTES; k++) {
+        n2bNullifier[k] = Num2Bits(8);
+        n2bNullifier[k].in <== nullifier.result[k];
+        for (var j = 0; j < 8; j++) {
+            nullifierBits[k*8 + (7 - j)] <== n2bNullifier[k].out[j];
+        }
+    }
 
     // calculate nullifierHash of the nullifer using pedersen hash
     // nullifier = `${givenName},${familyName},${dob}`
     // nullifierHash = Sha512(nullifier)
     // we only export 256 first bits of nullifier hash thus protecting nullifier privacy
-    // component nullifierSha512 = Sha512(NULLIFIFER_BITS);
-    // for (var i = 0; i < NULLIFIFER_BITS; i++) {
-    //     nullifierSha512.in[i] <== nullifierBits[i];
-    // }
+    component nullifierSha512 = Sha512(NULLIFIFER_BITS);
+    for (var i = 0; i < NULLIFIFER_BITS; i++) {
+        nullifierSha512.in[i] <== nullifierBits[i];
+    }
 
     // export
     component n2bExp = Num2Bits(TIMESTAMP_BITS);
@@ -613,15 +607,13 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     for(var k = 0; k < CHUNK_BYTES; k++) {
         var b = CHUNK_BYTES - 1 - k;
         for (var i = 0; i < BYTE_BITS; i++) {
-            // outB2n[0].in[b * BYTE_BITS + (7 - i)] <== nullifierSha512.out[k * BYTE_BITS + i];
-            outB2n[0].in[b * BYTE_BITS + (7 - i)] <== 0;
+            outB2n[0].in[b * BYTE_BITS + (7 - i)] <== nullifierSha512.out[k * BYTE_BITS + i];
         }
     }
     for(var k = 0; k < 8 / BYTE_BITS; k++) {
         var b = CHUNK_BYTES - 1 - k;
         for (var i = 0; i < BYTE_BITS; i++) {
-            // outB2n[1].in[b * BYTE_BITS + (7 - i)] <== nullifierSha512.out[CHUNK_BITS + (k * BYTE_BITS + i)];
-            outB2n[1].in[b * BYTE_BITS + (7 - i)] <== 0;
+            outB2n[1].in[b * BYTE_BITS + (7 - i)] <== nullifierSha512.out[CHUNK_BITS + (k * BYTE_BITS + i)];
         }
     }
 
