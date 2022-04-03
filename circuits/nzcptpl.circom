@@ -306,11 +306,11 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
     }
     for(var h = MaxStringLen; h < MaxBufferLen; h++) { givenName[h] <== 0; } // pad out the rest of the string with zeros to avoid invalid access
     component givenNameLenTally;
-    // givenNameLenTally = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
-    // for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
-    //     givenNameLenTally.nums[i] <== isGivenName[i].out * copyString[i].len;
-    // }
-    givenNameLen <== 0;
+    givenNameLenTally = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
+    for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
+        givenNameLenTally.nums[i] <== i == 0 ? (1 * copyString[i].len) : 0;
+    }
+    givenNameLen <== givenNameLenTally.sum;
 
 
     // assign familyName
@@ -324,11 +324,11 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
     }
     for(var h = MaxStringLen; h < MaxBufferLen; h++) { familyName[h] <== 0; } // pad out the rest of the string with zeros to avoid invalid access
     component familyNameLenTally;
-    // familyNameLenTally = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
-    // for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
-    //     familyNameLenTally.nums[i] <== isFamilyName[i].out * copyString[i].len;
-    // }
-    familyNameLen <== 0;
+    familyNameLenTally = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
+    for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
+        familyNameLenTally.nums[i] <== i == 0 ? (1 * copyString[i].len) : 0;
+    }
+    familyNameLen <== familyNameLenTally.sum;
 
 
     // assign dob
@@ -342,11 +342,11 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
     }
     for(var h = MaxStringLen; h < MaxBufferLen; h++) { dob[h] <== 0; } // pad out the rest of the string with zeros to avoid invalid access
     component dobLenTally;
-    // dobLenTally = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
-    // for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
-    //     dobLenTally.nums[i] <== isDOB[i].out * copyString[i].len;
-    // }
-    dobLen <== 0;
+    dobLenTally = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
+    for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
+        dobLenTally.nums[i] <== i == 0 ? (1 * copyString[i].len) : 0;
+    }
+    dobLen <== dobLenTally.sum;
 
 }
 
