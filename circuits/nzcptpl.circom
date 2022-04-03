@@ -274,9 +274,9 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
         readStringLength[k].pos <== k == 0 ? pos : 0;
 
         isGivenName[k] = StringEquals(BytesLen, GIVEN_NAME_STR, GIVEN_NAME_LEN);
-        // copyBytes(bytes, isGivenName[k].bytes, BytesLen)
-        // isGivenName[k].pos <== readStringLength[k].nextPos; // pos before skipping
-        // isGivenName[k].len <== readStringLength[k].len;
+        copyBytes(bytes, isGivenName[k].bytes, BytesLen)
+        isGivenName[k].pos <== readStringLength[k].nextPos; // pos before skipping
+        isGivenName[k].len <== readStringLength[k].len;
 
         // isFamilyName[k] = StringEquals(BytesLen, FAMILY_NAME_STR, FAMILY_NAME_LEN);
         // copyBytes(bytes, isFamilyName[k].bytes, BytesLen)

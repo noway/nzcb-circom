@@ -377,9 +377,9 @@ template StringEquals(BytesLen, ConstBytes, ConstBytesLen) {
     assert(ConstBytesLen <= BytesLen);
 
     // i/o signals
-    // signal input bytes[BytesLen];
-    // signal input pos;
-    // signal input len;
+    signal input bytes[BytesLen];
+    signal input pos;
+    signal input len;
     signal output out;
 
     // check if length matches
@@ -388,26 +388,27 @@ template StringEquals(BytesLen, ConstBytes, ConstBytesLen) {
     // isSameLen.in[1] <== ConstBytesLen;
 
     // compare every character
-    var conditionsSum = 1;
-    // component isEqual[ConstBytesLen];
-    // component getV[ConstBytesLen];
+    var conditionsSum = 0;
+    component isEqual[ConstBytesLen];
+    component getV[ConstBytesLen];
     for (var i = 0; i < ConstBytesLen; i++) {
-        // isEqual[i] = IsEqual();
-        // isEqual[i].in[0] <== ConstBytes[i];
+        isEqual[i] = IsEqual();
+        isEqual[i].in[0] <== ConstBytes[i];
 
-        // getV[i] = GetV(BytesLen);
-        // copyBytes(bytes, getV[i].bytes, BytesLen)
-        // getV[i].pos <== pos + i;
-        // isEqual[i].in[1] <== getV[i].v;
+        getV[i] = GetV(BytesLen);
+        copyBytes(bytes, getV[i].bytes, BytesLen)
+        getV[i].pos <== pos + i;
+        isEqual[i].in[1] <== getV[i].v;
 
         conditionsSum = conditionsSum + 1;
     }
 
     // return
-    var allConditionsAreTrue = ConstBytesLen + 1;
-    component isZero = IsZero();
-    isZero.in <== allConditionsAreTrue - conditionsSum;
-    out <== isZero.out;
+    var allConditionsAreTrue = ConstBytesLen + 0;
+    component ie = IsEqual();
+    ie.in[0] <== allConditionsAreTrue;
+    ie.in[1] <== conditionsSum;
+    out <== ie.out;
 }
 
 // @dev reads CBOR string length
