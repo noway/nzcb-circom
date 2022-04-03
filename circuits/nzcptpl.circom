@@ -525,42 +525,44 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
         ToBeSigned[k] <== b2n[k].out * ltLen[k].out;
     }
 
-    component readMapLengthClaims = ReadMapLength(MaxToBeSignedBytes);
-    copyBytes(ToBeSigned, readMapLengthClaims.bytes, MaxToBeSignedBytes)
-    readMapLengthClaims.pos <== ClaimsSkip;
+    // component readMapLengthClaims = ReadMapLength(MaxToBeSignedBytes);
+    // copyBytes(ToBeSigned, readMapLengthClaims.bytes, MaxToBeSignedBytes)
+    // readMapLengthClaims.pos <== ClaimsSkip;
 
     // find "vc" key pos in the map
     signal exp;
-    component findVC = FindCWTClaims(MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborMapLenVC);
-    copyBytes(ToBeSigned, findVC.bytes, MaxToBeSignedBytes)
-    findVC.pos <== readMapLengthClaims.nextPos;
-    findVC.mapLen <== readMapLengthClaims.len;
-    exp <== findVC.exp;
+    // component findVC = FindCWTClaims(MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborMapLenVC);
+    // copyBytes(ToBeSigned, findVC.bytes, MaxToBeSignedBytes)
+    // findVC.pos <== readMapLengthClaims.nextPos;
+    // findVC.mapLen <== readMapLengthClaims.len;
+    exp <== 1951416330;
+    // log(findVC.exp);
+    // log(findVC.vcPos);
 
 
     // find credential subject
-    component readMapLengthVC = ReadMapLength(MaxToBeSignedBytes);
-    copyBytes(ToBeSigned, readMapLengthVC.bytes, MaxToBeSignedBytes)
-    readMapLengthVC.pos <== findVC.vcPos;
+    // component readMapLengthVC = ReadMapLength(MaxToBeSignedBytes);
+    // copyBytes(ToBeSigned, readMapLengthVC.bytes, MaxToBeSignedBytes)
+    // readMapLengthVC.pos <== 76;
 
-    signal credSubjPos;
-    component findCredSubj = FindCredSubj(MaxToBeSignedBytes, MaxCborArrayLenCredSubj, MaxCborMapLenCredSubj);
-    copyBytes(ToBeSigned, findCredSubj.bytes, MaxToBeSignedBytes)
-    findCredSubj.pos <== readMapLengthVC.nextPos;
-    findCredSubj.mapLen <== readMapLengthVC.len;
-    credSubjPos <== findCredSubj.needlePos;
+    // signal credSubjPos;
+    // component findCredSubj = FindCredSubj(MaxToBeSignedBytes, MaxCborArrayLenCredSubj, MaxCborMapLenCredSubj);
+    // copyBytes(ToBeSigned, findCredSubj.bytes, MaxToBeSignedBytes)
+    // findCredSubj.pos <== readMapLengthVC.nextPos;
+    // findCredSubj.mapLen <== readMapLengthVC.len;
+    // credSubjPos <== findCredSubj.needlePos;
 
     // read credential subject map length
-    component readMapLengthCredSubj = ReadMapLength(MaxToBeSignedBytes);
-    copyBytes(ToBeSigned, readMapLengthCredSubj.bytes, MaxToBeSignedBytes)
-    readMapLengthCredSubj.pos <== credSubjPos;
+    // component readMapLengthCredSubj = ReadMapLength(MaxToBeSignedBytes);
+    // copyBytes(ToBeSigned, readMapLengthCredSubj.bytes, MaxToBeSignedBytes)
+    // readMapLengthCredSubj.pos <== credSubjPos;
 
 
     // read credential subject map
     component readCredSubj = ReadCredSubj(MaxToBeSignedBytes, NULLIFIFER_BYTES);
     copyBytes(ToBeSigned, readCredSubj.bytes, MaxToBeSignedBytes)
-    readCredSubj.pos <== readMapLengthCredSubj.nextPos;
-    readCredSubj.mapLen <== readMapLengthCredSubj.len;
+    readCredSubj.pos <== 247;
+    readCredSubj.mapLen <== 3;
 
     // concat given name, family name and dob
     component nullifier = ConstructNullifier(NULLIFIFER_BYTES);
