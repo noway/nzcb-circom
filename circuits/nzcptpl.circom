@@ -262,35 +262,35 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
 
     component readStringLength[CREDENTIAL_SUBJECT_MAP_LEN];
 
-    component isGivenName[CREDENTIAL_SUBJECT_MAP_LEN];
-    component isFamilyName[CREDENTIAL_SUBJECT_MAP_LEN];
-    component isDOB[CREDENTIAL_SUBJECT_MAP_LEN];
-    component copyString[CREDENTIAL_SUBJECT_MAP_LEN];
+    // component isGivenName[CREDENTIAL_SUBJECT_MAP_LEN];
+    // component isFamilyName[CREDENTIAL_SUBJECT_MAP_LEN];
+    // component isDOB[CREDENTIAL_SUBJECT_MAP_LEN];
+    // component copyString[CREDENTIAL_SUBJECT_MAP_LEN];
 
     for(var k = 0; k < CREDENTIAL_SUBJECT_MAP_LEN; k++) {
 
         readStringLength[k] = ReadStringLength(BytesLen);
         copyBytes(bytes, readStringLength[k].bytes, BytesLen)
-        readStringLength[k].pos <== k == 0 ? pos : copyString[k - 1].nextPos;
+        readStringLength[k].pos <== k == 0 ? pos : 0;
 
-        isGivenName[k] = StringEquals(BytesLen, GIVEN_NAME_STR, GIVEN_NAME_LEN);
-        copyBytes(bytes, isGivenName[k].bytes, BytesLen)
-        isGivenName[k].pos <== readStringLength[k].nextPos; // pos before skipping
-        isGivenName[k].len <== readStringLength[k].len;
+        // isGivenName[k] = StringEquals(BytesLen, GIVEN_NAME_STR, GIVEN_NAME_LEN);
+        // copyBytes(bytes, isGivenName[k].bytes, BytesLen)
+        // isGivenName[k].pos <== readStringLength[k].nextPos; // pos before skipping
+        // isGivenName[k].len <== readStringLength[k].len;
 
-        isFamilyName[k] = StringEquals(BytesLen, FAMILY_NAME_STR, FAMILY_NAME_LEN);
-        copyBytes(bytes, isFamilyName[k].bytes, BytesLen)
-        isFamilyName[k].pos <== readStringLength[k].nextPos; // pos before skipping
-        isFamilyName[k].len <== readStringLength[k].len;
+        // isFamilyName[k] = StringEquals(BytesLen, FAMILY_NAME_STR, FAMILY_NAME_LEN);
+        // copyBytes(bytes, isFamilyName[k].bytes, BytesLen)
+        // isFamilyName[k].pos <== readStringLength[k].nextPos; // pos before skipping
+        // isFamilyName[k].len <== readStringLength[k].len;
 
-        isDOB[k] = StringEquals(BytesLen, DOB_STR, DOB_LEN);
-        copyBytes(bytes, isDOB[k].bytes, BytesLen)
-        isDOB[k].pos <== readStringLength[k].nextPos; // pos before skipping
-        isDOB[k].len <== readStringLength[k].len;
+        // isDOB[k] = StringEquals(BytesLen, DOB_STR, DOB_LEN);
+        // copyBytes(bytes, isDOB[k].bytes, BytesLen)
+        // isDOB[k].pos <== readStringLength[k].nextPos; // pos before skipping
+        // isDOB[k].len <== readStringLength[k].len;
 
-        copyString[k] = CopyString(BytesLen, MaxStringLen);
-        copyBytes(bytes, copyString[k].bytes, BytesLen)
-        copyString[k].pos <== readStringLength[k].nextPos + readStringLength[k].len;
+        // copyString[k] = CopyString(BytesLen, MaxStringLen);
+        // copyBytes(bytes, copyString[k].bytes, BytesLen)
+        // copyString[k].pos <== readStringLength[k].nextPos + readStringLength[k].len;
 
     }
 
@@ -298,55 +298,55 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
     // assign givenName
     component givenNameCharTally[MaxStringLen];
     for(var h = 0; h<MaxStringLen; h++) {
-        givenNameCharTally[h] = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
-        for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
-            givenNameCharTally[h].nums[i] <== isGivenName[i].out * copyString[i].outbytes[h];
-        }
-        givenName[h] <== givenNameCharTally[h].sum;
+        // givenNameCharTally[h] = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
+        // for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
+        //     givenNameCharTally[h].nums[i] <== isGivenName[i].out * copyString[i].outbytes[h];
+        // }
+        givenName[h] <== 0;
     }
     for(var h = MaxStringLen; h < MaxBufferLen; h++) { givenName[h] <== 0; } // pad out the rest of the string with zeros to avoid invalid access
     component givenNameLenTally;
-    givenNameLenTally = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
-    for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
-        givenNameLenTally.nums[i] <== isGivenName[i].out * copyString[i].len;
-    }
-    givenNameLen <== givenNameLenTally.sum;
+    // givenNameLenTally = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
+    // for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
+    //     givenNameLenTally.nums[i] <== isGivenName[i].out * copyString[i].len;
+    // }
+    givenNameLen <== 0;
 
 
     // assign familyName
     component familyNameCharTally[MaxStringLen];
     for(var h = 0; h<MaxStringLen; h++) {
-        familyNameCharTally[h] = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
-        for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
-            familyNameCharTally[h].nums[i] <== isFamilyName[i].out * copyString[i].outbytes[h];
-        }
-        familyName[h] <== familyNameCharTally[h].sum;
+        // familyNameCharTally[h] = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
+        // for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
+        //     familyNameCharTally[h].nums[i] <== isFamilyName[i].out * copyString[i].outbytes[h];
+        // }
+        familyName[h] <== 0;
     }
     for(var h = MaxStringLen; h < MaxBufferLen; h++) { familyName[h] <== 0; } // pad out the rest of the string with zeros to avoid invalid access
     component familyNameLenTally;
-    familyNameLenTally = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
-    for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
-        familyNameLenTally.nums[i] <== isFamilyName[i].out * copyString[i].len;
-    }
-    familyNameLen <== familyNameLenTally.sum;
+    // familyNameLenTally = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
+    // for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
+    //     familyNameLenTally.nums[i] <== isFamilyName[i].out * copyString[i].len;
+    // }
+    familyNameLen <== 0;
 
 
     // assign dob
     component dobCharTally[MaxStringLen];
     for(var h = 0; h<MaxStringLen; h++) {
-        dobCharTally[h] = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
-        for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
-            dobCharTally[h].nums[i] <== isDOB[i].out * copyString[i].outbytes[h];
-        }
-        dob[h] <== dobCharTally[h].sum;
+        // dobCharTally[h] = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
+        // for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
+        //     dobCharTally[h].nums[i] <== isDOB[i].out * copyString[i].outbytes[h];
+        // }
+        dob[h] <== 0;
     }
     for(var h = MaxStringLen; h < MaxBufferLen; h++) { dob[h] <== 0; } // pad out the rest of the string with zeros to avoid invalid access
     component dobLenTally;
-    dobLenTally = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
-    for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
-        dobLenTally.nums[i] <== isDOB[i].out * copyString[i].len;
-    }
-    dobLen <== dobLenTally.sum;
+    // dobLenTally = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
+    // for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
+    //     dobLenTally.nums[i] <== isDOB[i].out * copyString[i].len;
+    // }
+    dobLen <== 0;
 
 }
 
