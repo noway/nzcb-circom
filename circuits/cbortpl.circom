@@ -377,30 +377,30 @@ template StringEquals(BytesLen, ConstBytes, ConstBytesLen) {
     assert(ConstBytesLen <= BytesLen);
 
     // i/o signals
-    signal input bytes[BytesLen];
-    signal input pos;
-    signal input len;
+    // signal input bytes[BytesLen];
+    // signal input pos;
+    // signal input len;
     signal output out;
 
     // check if length matches
-    component isSameLen = IsEqual();
-    isSameLen.in[0] <== len;
-    isSameLen.in[1] <== ConstBytesLen;
+    // component isSameLen = IsEqual();
+    // isSameLen.in[0] <== len;
+    // isSameLen.in[1] <== ConstBytesLen;
 
     // compare every character
-    var conditionsSum = isSameLen.out;
-    component isEqual[ConstBytesLen];
-    component getV[ConstBytesLen];
+    var conditionsSum = 1;
+    // component isEqual[ConstBytesLen];
+    // component getV[ConstBytesLen];
     for (var i = 0; i < ConstBytesLen; i++) {
-        isEqual[i] = IsEqual();
-        isEqual[i].in[0] <== ConstBytes[i];
+        // isEqual[i] = IsEqual();
+        // isEqual[i].in[0] <== ConstBytes[i];
 
-        getV[i] = GetV(BytesLen);
-        copyBytes(bytes, getV[i].bytes, BytesLen)
-        getV[i].pos <== pos + i;
-        isEqual[i].in[1] <== getV[i].v;
+        // getV[i] = GetV(BytesLen);
+        // copyBytes(bytes, getV[i].bytes, BytesLen)
+        // getV[i].pos <== pos + i;
+        // isEqual[i].in[1] <== getV[i].v;
 
-        conditionsSum = conditionsSum + isEqual[i].out;
+        conditionsSum = conditionsSum + 1;
     }
 
     // return
