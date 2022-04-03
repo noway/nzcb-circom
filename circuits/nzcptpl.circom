@@ -265,7 +265,7 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
     // component isGivenName[CREDENTIAL_SUBJECT_MAP_LEN];
     // component isFamilyName[CREDENTIAL_SUBJECT_MAP_LEN];
     // component isDOB[CREDENTIAL_SUBJECT_MAP_LEN];
-    // component copyString[CREDENTIAL_SUBJECT_MAP_LEN];
+    component copyString[CREDENTIAL_SUBJECT_MAP_LEN];
 
     for(var k = 0; k < 1; k++) {
 
@@ -288,9 +288,9 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
         // isDOB[k].pos <== readStringLength[k].nextPos; // pos before skipping
         // isDOB[k].len <== readStringLength[k].len;
 
-        // copyString[k] = CopyString(BytesLen, MaxStringLen);
-        // copyBytes(bytes, copyString[k].bytes, BytesLen)
-        // copyString[k].pos <== readStringLength[k].nextPos + readStringLength[k].len;
+        copyString[k] = CopyString(BytesLen, MaxStringLen);
+        copyBytes(bytes, copyString[k].bytes, BytesLen)
+        copyString[k].pos <== readStringLength[k].nextPos + readStringLength[k].len;
 
     }
 
@@ -298,11 +298,11 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
     // assign givenName
     component givenNameCharTally[MaxStringLen];
     for(var h = 0; h<MaxStringLen; h++) {
-        // givenNameCharTally[h] = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
-        // for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
-        //     givenNameCharTally[h].nums[i] <== isGivenName[i].out * copyString[i].outbytes[h];
-        // }
-        givenName[h] <== 0;
+        givenNameCharTally[h] = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
+        for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
+            givenNameCharTally[h].nums[i] <== i == 0 ? (1 * copyString[i].outbytes[h]) : 0;
+        }
+        givenName[h] <== givenNameCharTally[h].sum;
     }
     for(var h = MaxStringLen; h < MaxBufferLen; h++) { givenName[h] <== 0; } // pad out the rest of the string with zeros to avoid invalid access
     component givenNameLenTally;
