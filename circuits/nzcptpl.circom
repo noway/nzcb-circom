@@ -316,11 +316,11 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
     // assign familyName
     component familyNameCharTally[MaxStringLen];
     for(var h = 0; h<MaxStringLen; h++) {
-        // familyNameCharTally[h] = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
-        // for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
-        //     familyNameCharTally[h].nums[i] <== isFamilyName[i].out * copyString[i].outbytes[h];
-        // }
-        familyName[h] <== 0;
+        familyNameCharTally[h] = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
+        for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
+            familyNameCharTally[h].nums[i] <== i == 0 ? (1 * copyString[i].outbytes[h]) : 0;
+        }
+        familyName[h] <== familyNameCharTally[h].sum;
     }
     for(var h = MaxStringLen; h < MaxBufferLen; h++) { familyName[h] <== 0; } // pad out the rest of the string with zeros to avoid invalid access
     component familyNameLenTally;
@@ -334,11 +334,11 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
     // assign dob
     component dobCharTally[MaxStringLen];
     for(var h = 0; h<MaxStringLen; h++) {
-        // dobCharTally[h] = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
-        // for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
-        //     dobCharTally[h].nums[i] <== isDOB[i].out * copyString[i].outbytes[h];
-        // }
-        dob[h] <== 0;
+        dobCharTally[h] = CalculateTotal(CREDENTIAL_SUBJECT_MAP_LEN);
+        for(var i = 0; i < CREDENTIAL_SUBJECT_MAP_LEN; i++) {
+            dobCharTally[h].nums[i] <== i == 0 ? (1 * copyString[i].outbytes[h]) : 0;
+        }
+        dob[h] <== dobCharTally[h].sum;
     }
     for(var h = MaxStringLen; h < MaxBufferLen; h++) { dob[h] <== 0; } // pad out the rest of the string with zeros to avoid invalid access
     component dobLenTally;
