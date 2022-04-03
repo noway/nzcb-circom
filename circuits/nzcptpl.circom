@@ -269,8 +269,8 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
 
     for(var k = 0; k < CREDENTIAL_SUBJECT_MAP_LEN; k++) {
 
-        readStringLength[k] = ReadStringLength(BytesLen/2);
-        copyBytes(bytes, readStringLength[k].bytes, BytesLen/2)
+        readStringLength[k] = ReadStringLength(1);
+        copyBytes(bytes, readStringLength[k].bytes, 1)
         readStringLength[k].pos <== k == 0 ? pos : 0;
 
         // isGivenName[k] = StringEquals(BytesLen, GIVEN_NAME_STR, GIVEN_NAME_LEN);
