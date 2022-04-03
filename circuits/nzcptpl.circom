@@ -267,7 +267,7 @@ template ReadCredSubj(BytesLen, MaxBufferLen) {
     // component isDOB[CREDENTIAL_SUBJECT_MAP_LEN];
     // component copyString[CREDENTIAL_SUBJECT_MAP_LEN];
 
-    for(var k = 0; k < CREDENTIAL_SUBJECT_MAP_LEN; k++) {
+    for(var k = 0; k < 2; k++) {
 
         readStringLength[k] = ReadStringLength(1);
         copyBytes(bytes, readStringLength[k].bytes, 1)
