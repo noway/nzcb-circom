@@ -565,33 +565,33 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     readCredSubj.mapLen <== 3;
 
     // concat given name, family name and dob
-    component nullifier = ConstructNullifier(NULLIFIFER_BYTES);
-    nullifier.givenNameLen <== readCredSubj.givenNameLen;
-    nullifier.familyNameLen <== readCredSubj.familyNameLen;
-    nullifier.dobLen <== readCredSubj.dobLen;
-    for (var i = 0; i < NULLIFIFER_BYTES; i++) { nullifier.givenName[i] <== readCredSubj.givenName[i]; }
-    for (var i = 0; i < NULLIFIFER_BYTES; i++) { nullifier.familyName[i] <== readCredSubj.familyName[i]; }
-    for (var i = 0; i < NULLIFIFER_BYTES; i++) { nullifier.dob[i] <== readCredSubj.dob[i]; }
+    // component nullifier = ConstructNullifier(NULLIFIFER_BYTES);
+    // nullifier.givenNameLen <== readCredSubj.givenNameLen;
+    // nullifier.familyNameLen <== readCredSubj.familyNameLen;
+    // nullifier.dobLen <== readCredSubj.dobLen;
+    // for (var i = 0; i < NULLIFIFER_BYTES; i++) { nullifier.givenName[i] <== readCredSubj.givenName[i]; }
+    // for (var i = 0; i < NULLIFIFER_BYTES; i++) { nullifier.familyName[i] <== readCredSubj.familyName[i]; }
+    // for (var i = 0; i < NULLIFIFER_BYTES; i++) { nullifier.dob[i] <== readCredSubj.dob[i]; }
     
     // convert concat string into bits
-    component n2bNullifier[NULLIFIFER_BYTES];
-    signal nullifierBits[NULLIFIFER_BITS];
-    for(var k = 0; k < NULLIFIFER_BYTES; k++) {
-        n2bNullifier[k] = Num2Bits(8);
-        n2bNullifier[k].in <== nullifier.result[k];
-        for (var j = 0; j < 8; j++) {
-            nullifierBits[k*8 + (7 - j)] <== n2bNullifier[k].out[j];
-        }
-    }
+    // component n2bNullifier[NULLIFIFER_BYTES];
+    // signal nullifierBits[NULLIFIFER_BITS];
+    // for(var k = 0; k < NULLIFIFER_BYTES; k++) {
+    //     n2bNullifier[k] = Num2Bits(8);
+    //     n2bNullifier[k].in <== nullifier.result[k];
+    //     for (var j = 0; j < 8; j++) {
+    //         nullifierBits[k*8 + (7 - j)] <== n2bNullifier[k].out[j];
+    //     }
+    // }
 
     // calculate nullifierHash of the nullifer using pedersen hash
     // nullifier = `${givenName},${familyName},${dob}`
     // nullifierHash = Sha512(nullifier)
     // we only export 256 first bits of nullifier hash thus protecting nullifier privacy
-    component nullifierSha512 = Sha512(NULLIFIFER_BITS);
-    for (var i = 0; i < NULLIFIFER_BITS; i++) {
-        nullifierSha512.in[i] <== nullifierBits[i];
-    }
+    // component nullifierSha512 = Sha512(NULLIFIFER_BITS);
+    // for (var i = 0; i < NULLIFIFER_BITS; i++) {
+    //     nullifierSha512.in[i] <== nullifierBits[i];
+    // }
 
     // export
     component n2bExp = Num2Bits(TIMESTAMP_BITS);
@@ -609,13 +609,15 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     for(var k = 0; k < CHUNK_BYTES; k++) {
         var b = CHUNK_BYTES - 1 - k;
         for (var i = 0; i < BYTE_BITS; i++) {
-            outB2n[0].in[b * BYTE_BITS + (7 - i)] <== nullifierSha512.out[k * BYTE_BITS + i];
+            // outB2n[0].in[b * BYTE_BITS + (7 - i)] <== nullifierSha512.out[k * BYTE_BITS + i];
+            outB2n[0].in[b * BYTE_BITS + (7 - i)] <== 0;
         }
     }
     for(var k = 0; k < 8 / BYTE_BITS; k++) {
         var b = CHUNK_BYTES - 1 - k;
         for (var i = 0; i < BYTE_BITS; i++) {
-            outB2n[1].in[b * BYTE_BITS + (7 - i)] <== nullifierSha512.out[CHUNK_BITS + (k * BYTE_BITS + i)];
+            // outB2n[1].in[b * BYTE_BITS + (7 - i)] <== nullifierSha512.out[CHUNK_BITS + (k * BYTE_BITS + i)];
+            outB2n[1].in[b * BYTE_BITS + (7 - i)] <== 0;
         }
     }
 
