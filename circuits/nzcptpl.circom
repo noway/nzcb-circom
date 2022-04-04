@@ -539,28 +539,28 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
 
 
     // find credential subject
-    component readMapLengthVC = ReadMapLength(MaxToBeSignedBytes);
-    copyBytes(ToBeSigned, readMapLengthVC.bytes, MaxToBeSignedBytes)
-    readMapLengthVC.pos <== findVC.vcPos;
+    // component readMapLengthVC = ReadMapLength(MaxToBeSignedBytes);
+    // copyBytes(ToBeSigned, readMapLengthVC.bytes, MaxToBeSignedBytes)
+    // readMapLengthVC.pos <== findVC.vcPos;
 
-    signal credSubjPos;
-    component findCredSubj = FindCredSubj(MaxToBeSignedBytes, MaxCborArrayLenCredSubj, MaxCborMapLenCredSubj);
-    copyBytes(ToBeSigned, findCredSubj.bytes, MaxToBeSignedBytes)
-    findCredSubj.pos <== readMapLengthVC.nextPos;
-    findCredSubj.mapLen <== readMapLengthVC.len;
-    credSubjPos <== findCredSubj.needlePos;
+    // signal credSubjPos;
+    // component findCredSubj = FindCredSubj(MaxToBeSignedBytes, MaxCborArrayLenCredSubj, MaxCborMapLenCredSubj);
+    // copyBytes(ToBeSigned, findCredSubj.bytes, MaxToBeSignedBytes)
+    // findCredSubj.pos <== readMapLengthVC.nextPos;
+    // findCredSubj.mapLen <== readMapLengthVC.len;
+    // credSubjPos <== findCredSubj.needlePos;
 
     // read credential subject map length
-    component readMapLengthCredSubj = ReadMapLength(MaxToBeSignedBytes);
-    copyBytes(ToBeSigned, readMapLengthCredSubj.bytes, MaxToBeSignedBytes)
-    readMapLengthCredSubj.pos <== credSubjPos;
+    // component readMapLengthCredSubj = ReadMapLength(MaxToBeSignedBytes);
+    // copyBytes(ToBeSigned, readMapLengthCredSubj.bytes, MaxToBeSignedBytes)
+    // readMapLengthCredSubj.pos <== credSubjPos;
 
 
     // read credential subject map
     component readCredSubj = ReadCredSubj(MaxToBeSignedBytes, NULLIFIFER_BYTES);
     copyBytes(ToBeSigned, readCredSubj.bytes, MaxToBeSignedBytes)
-    readCredSubj.pos <== readMapLengthCredSubj.nextPos;
-    readCredSubj.mapLen <== readMapLengthCredSubj.len;
+    readCredSubj.pos <== 171 + findVC.vcPos;
+    readCredSubj.mapLen <== 3;
 
     // concat given name, family name and dob
     component nullifier = ConstructNullifier(NULLIFIFER_BYTES);
