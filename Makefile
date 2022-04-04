@@ -25,7 +25,7 @@ sha256-var-circom-main/: sha256-var-circom.zip
 	cd $@ && make
 
 sha512.zip:
-	curl -Lo $@ https://github.com/noway/sha512/archive/refs/heads/master.zip
+	curl -Lo $@ https://github.com/Electron-Labs/sha512/archive/refs/heads/master.zip
 
 sha512-master/: sha512.zip
 	unzip $<
