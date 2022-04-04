@@ -9,10 +9,10 @@ circuits/nzcp_liveTest.wasm:
 	circom circuits/nzcp_liveTest.circom --r1cs --wasm
 
 circuits/nzcp_example.wasm:
-	circom circuits/nzcp_example.circom --r1cs --wasm --O0
+	circom circuits/nzcp_example.circom --r1cs --wasm --O2
 
 circuits/nzcp_live.wasm:
-	circom circuits/nzcp_live.circom --r1cs --wasm --O0
+	circom circuits/nzcp_live.circom --r1cs --wasm --O2
 
 test: node_modules circuits/nzcp.circom
 	yarn exec mocha
@@ -52,7 +52,7 @@ node_modules/:
 	yarn
 
 plonk:
-	NODE_OPTIONS=--max-old-space-size=16384 snarkjs plonk setup nzcp_example.r1cs powersOfTau28_hez_final_23.ptau nzcp_example_final.zkey
+	NODE_OPTIONS=--max-old-space-size=16384 snarkjs plonk setup nzcp_example.r1cs powersOfTau28_hez_final_21.ptau nzcp_example_final.zkey
 	snarkjs zkey export verificationkey nzcp_example_final.zkey verification_key.json
 	snarkjs zkey export solidityverifier nzcp_example_final.zkey contracts/VerifierExample.sol
 
