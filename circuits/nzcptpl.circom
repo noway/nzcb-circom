@@ -145,6 +145,7 @@ template FindCWTClaims(BytesLen, MaxCborArrayLen, MaxCborMapLen) {
 }
 
 // @dev find credential subject position
+// @dev this is not used for NZCOVIDBadge
 // @param BytesLen - max bytes length of the cbor buffer
 // @param MaxCborArrayLen - maximum number of elements in the CBOR array
 // @param MaxCborMapLen - maximum number of elements in the CBOR map
@@ -454,6 +455,12 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     var TIMESTAMP_BITS = BYTE_BITS * TIMESTAMP_BYTES;
     var CHUNK_BYTES = CHUNK_BITS / BYTE_BITS;
 
+    // hardcoded constants for credential subject.
+    // relies on MoH not inserting any new fields into the verifiable credential
+    // which they are not allowing to do in NZCP spec.
+    var CREDENTIAL_SUBJECT_VC_OFFSET = 171;
+    var CREDENTIAL_SUBJECT_MAP_LEN = 3;
+
     // concat string aka the nullifier
     // Only 64 character latin strings are supported.
     var NULLIFIFER_BYTES = 64;
@@ -559,8 +566,8 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     // read credential subject map
     component readCredSubj = ReadCredSubj(MaxToBeSignedBytes, NULLIFIFER_BYTES);
     copyBytes(ToBeSigned, readCredSubj.bytes, MaxToBeSignedBytes)
-    readCredSubj.pos <== 171 + findVC.vcPos;
-    readCredSubj.mapLen <== 3;
+    readCredSubj.pos <== CREDENTIAL_SUBJECT_VC_OFFSET + findVC.vcPos;
+    readCredSubj.mapLen <== CREDENTIAL_SUBJECT_MAP_LEN;
 
     // concat given name, family name and dob
     component nullifier = ConstructNullifier(NULLIFIFER_BYTES);
