@@ -52,9 +52,9 @@ node_modules/:
 	yarn
 
 plonk:
-	snarkjs plonk setup nzcp_exampleTest.r1cs powersOfTau28_hez_final_22.ptau nzcp_exampleTest_final.zkey
-	snarkjs zkey export verificationkey nzcp_exampleTest_final.zkey verification_key.json
-	snarkjs zkey export solidityverifier nzcp_exampleTest_final.zkey contracts/VerifierExample.sol
+	snarkjs plonk setup nzcp_example.r1cs powersOfTau28_hez_final_22.ptau nzcp_example_final.zkey
+	snarkjs zkey export verificationkey nzcp_example_final.zkey verification_key.json
+	snarkjs zkey export solidityverifier nzcp_example_final.zkey contracts/VerifierExample.sol
 
 phase1:
 	snarkjs powersoftau new bn128 21 pot21_0000.ptau -v
