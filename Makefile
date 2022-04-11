@@ -51,10 +51,15 @@ circuits/cbor.circom: sha256-var-circom-main
 node_modules/:
 	yarn
 
-plonk:
+plonk_example:
 	NODE_OPTIONS=--max-old-space-size=16384 snarkjs plonk setup nzcp_example.r1cs powersOfTau28_hez_final_21.ptau nzcp_example_final.zkey
 	snarkjs zkey export verificationkey nzcp_example_final.zkey verification_key.json
 	snarkjs zkey export solidityverifier nzcp_example_final.zkey contracts/VerifierExample.sol
+
+plonk_live:
+	NODE_OPTIONS=--max-old-space-size=16384 snarkjs plonk setup nzcp_live.r1cs powersOfTau28_hez_final_21.ptau nzcp_live_final.zkey
+	snarkjs zkey export verificationkey nzcp_live_final.zkey verification_key.json
+	snarkjs zkey export solidityverifier nzcp_live_final.zkey contracts/VerifierLive.sol
 
 phase1:
 	snarkjs powersoftau new bn128 21 pot21_0000.ptau -v
