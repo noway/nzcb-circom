@@ -639,11 +639,16 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     c = 0;
     idx = 0;
     for(var k = 2 + TIMESTAMP_BYTES; k < CHUNK_BYTES; k++) {
+        var DataBytes = DATA_LEN / BYTE_BITS;
         var b = CHUNK_BYTES - 1 - k;
-        var d = (DATA_LEN / BYTE_BITS) - 1 - idx;
         for (var i = 0; i < BYTE_BITS; i++) {
-            var dataidx = d * BYTE_BITS + i;
-            outB2n[2].in[b * BYTE_BITS + i] <== dataidx < DATA_LEN ? data[dataidx] : 0;
+            if (idx < DataBytes) {
+                var d = DataBytes - 1 - idx;
+                outB2n[2].in[b * BYTE_BITS + i] <== data[d * BYTE_BITS + i];
+            }
+            else {
+                outB2n[2].in[b * BYTE_BITS + i] <== 0;
+            }
             c++;
         }
         idx++;
