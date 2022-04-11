@@ -470,7 +470,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     var NULLIFIFER_HASH_HALF_BITS = 256;
 
     // compile time parameters
-    var DataLen = CHUNK_BITS * OUT_SIGNALS - HASHPART_BITS - SHA256_BITS - TIMESTAMP_BITS;
+    var DATA_LEN = 20 * BYTE_BITS;
     var ClaimsSkip = IsLive ? CLAIMS_SKIP_LIVE : CLAIMS_SKIP_EXAMPLE;
 
     // ToBeSigned hash
@@ -485,7 +485,7 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     // i/o signals
     signal input toBeSigned[MaxToBeSignedBits]; // gets zero-outted beyond length
     signal input toBeSignedLen; // length of toBeSigned in bytes
-    signal input data[DataLen]; // extra pass-thru data for various purposes, fill with 0s of not needed
+    signal input data[DATA_LEN]; // extra pass-thru data for various purposes, fill with 0s of not needed
     signal output out[OUT_SIGNALS];
 
 
@@ -640,9 +640,10 @@ template NZCPPubIdentity(IsLive, MaxToBeSignedBytes, MaxCborArrayLenVC, MaxCborM
     idx = 0;
     for(var k = 2 + TIMESTAMP_BYTES; k < CHUNK_BYTES; k++) {
         var b = CHUNK_BYTES - 1 - k;
-        var d = (DataLen / BYTE_BITS) - 1 - idx;
+        var d = (DATA_LEN / BYTE_BITS) - 1 - idx;
         for (var i = 0; i < BYTE_BITS; i++) {
-            outB2n[2].in[b * BYTE_BITS + i] <== data[d * BYTE_BITS + i];
+            var dataidx = d * BYTE_BITS + i;
+            outB2n[2].in[b * BYTE_BITS + i] <== dataidx < DATA_LEN ? data[dataidx] : 0;
             c++;
         }
         idx++;
