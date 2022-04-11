@@ -54,7 +54,7 @@ async function testNZCPPubIdentity(cir, passURI, isLive, maxLen) {
     const toBeSignedHash = new Uint8Array([...Array.from(out1).slice(1), out2[0], out2[1]])
     const expBytes = new Uint8Array([out2[2], out2[3], out2[4], out2[5]])
 
-    const data = out2.slice(6)
+    const data = out2.slice(6, 6 + 20)
     console.log('nullifierHashPart', nullifierHashPart)
     console.log('toBeSignedHash', toBeSignedHash)
     
