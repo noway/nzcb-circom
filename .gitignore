@@ -21,3 +21,4 @@ nzcp_liveTest.r1cs
 nzcp_example_js
 nzcp_live_js
 contracts/*.sol
+*.sym
