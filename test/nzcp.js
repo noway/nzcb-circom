@@ -8,6 +8,10 @@ const { padArray, stringToArray } = require('./helpers/cbor');
 
 require('dotenv').config()
 
+const EXAMPLE_TOBESIGNED_MAX = 314;
+const LIVE_TOBESIGNED_MAX = 351;
+
+
 async function getNZCPPubIdentity(passURI, isLive) {
     const verificationResult = verifyPassURIOffline(passURI, { didDocument: isLive ? DID_DOCUMENTS.MOH_LIVE : DID_DOCUMENTS.MOH_EXAMPLE })
     const { givenName, familyName, dob } = verificationResult.credentialSubject;
@@ -94,7 +98,7 @@ async function testFindCWTClaims(cir, passURI, isLive, pos, maxLen, expectedVCPo
 describe("NZCP find CWT claims - example pass", function () {
     this.timeout(100000);
 
-    const maxLen = 314;
+    const maxLen = EXAMPLE_TOBESIGNED_MAX;
     let cir
     before(async () => {
         cir = await wasm_tester(`${__dirname}/../circuits/findCWTClaims_exampleTest.circom`);
@@ -108,7 +112,7 @@ describe("NZCP find CWT claims - example pass", function () {
 describe("NZCP find CWT claims - live pass", function () {
     this.timeout(100000);
 
-    const maxLen = 355;
+    const maxLen = LIVE_TOBESIGNED_MAX;
     let cir
     before(async () => {
         cir = await wasm_tester(`${__dirname}/../circuits/findCWTClaims_liveTest.circom`);
@@ -151,7 +155,7 @@ async function testFindCredSubj(cir, passURI, pos, maxLen, expectedCredSubjPos) 
 describe("NZCP find credential subject - example pass", function () {
     this.timeout(100000);
 
-    const maxLen = 314;
+    const maxLen = EXAMPLE_TOBESIGNED_MAX;
     let cir
     before(async () => {
         cir = await wasm_tester(`${__dirname}/../circuits/findCredSubj_exampleTest.circom`);
@@ -165,7 +169,7 @@ describe("NZCP find credential subject - example pass", function () {
 describe("NZCP find credential subject - live pass", function () {
     this.timeout(100000);
 
-    const maxLen = 355;
+    const maxLen = LIVE_TOBESIGNED_MAX;
     let cir
     before(async () => {
         cir = await wasm_tester(`${__dirname}/../circuits/findCredSubj_liveTest.circom`);
@@ -233,7 +237,7 @@ describe("NZCP read credential subject - example pass", function () {
     })
 
     it ("Should read credential subject of EXAMPLE_PASS_URI", async () => {
-        await testReadCredSubj(cir, EXAMPLE_PASS_URI, false, 247, 314, 32);
+        await testReadCredSubj(cir, EXAMPLE_PASS_URI, false, 247, EXAMPLE_TOBESIGNED_MAX, 32);
     });
 });
 
@@ -246,21 +250,21 @@ describe("NZCP read credential subject - live pass", function () {
     })
 
     it ("Should read credential subject of LIVE_PASS_URI_1", async () => {
-        await testReadCredSubj(cir, LIVE_PASS_URI_1, true, 251, 355, 64);
+        await testReadCredSubj(cir, LIVE_PASS_URI_1, true, 251, LIVE_TOBESIGNED_MAX, 64);
     });
     if (LIVE_PASS_URI_2) {
         it ("Should read credential subject of LIVE_PASS_URI_2", async () => {
-            await testReadCredSubj(cir, LIVE_PASS_URI_2, true, 251, 355, 64);
+            await testReadCredSubj(cir, LIVE_PASS_URI_2, true, 251, LIVE_TOBESIGNED_MAX, 64);
         });
     }
     if (LIVE_PASS_URI_3) {
         it ("Should read credential subject of LIVE_PASS_URI_3", async () => {
-            await testReadCredSubj(cir, LIVE_PASS_URI_3, true, 251, 355, 64);
+            await testReadCredSubj(cir, LIVE_PASS_URI_3, true, 251, LIVE_TOBESIGNED_MAX, 64);
         });
     }
     if (LIVE_PASS_URI_4) {
         it ("Should read credential subject of LIVE_PASS_URI_4", async () => {
-            await testReadCredSubj(cir, LIVE_PASS_URI_4, true, 251, 355, 64);
+            await testReadCredSubj(cir, LIVE_PASS_URI_4, true, 251, LIVE_TOBESIGNED_MAX, 64);
         });
     }
 });
@@ -330,7 +334,7 @@ describe("NZCP public identity - example pass", function () {
     })
 
     it ("Should output pub identity for EXAMPLE_PASS_URI", async () => {
-        await testNZCPPubIdentity(cir, EXAMPLE_PASS_URI, false, 314);
+        await testNZCPPubIdentity(cir, EXAMPLE_PASS_URI, false, EXAMPLE_TOBESIGNED_MAX);
     });
 });
 
@@ -344,21 +348,21 @@ describe("NZCP public identity - live pass", function () {
     })
 
     it ("Should output pub identity for LIVE_PASS_URI_1", async () => {
-        await testNZCPPubIdentity(cir, LIVE_PASS_URI_1, true, 355);
+        await testNZCPPubIdentity(cir, LIVE_PASS_URI_1, true, LIVE_TOBESIGNED_MAX);
     });
     if (LIVE_PASS_URI_2) {
         it ("Should output pub identity for LIVE_PASS_URI_2", async () => {
-            await testNZCPPubIdentity(cir, LIVE_PASS_URI_2, true, 355);
+            await testNZCPPubIdentity(cir, LIVE_PASS_URI_2, true, LIVE_TOBESIGNED_MAX);
         });
     }
     if (LIVE_PASS_URI_3) {
         it ("Should output pub identity for LIVE_PASS_URI_3", async () => {
-            await testNZCPPubIdentity(cir, LIVE_PASS_URI_3, true, 355);
+            await testNZCPPubIdentity(cir, LIVE_PASS_URI_3, true, LIVE_TOBESIGNED_MAX);
         });
     }
     if (LIVE_PASS_URI_4) {
         it ("Should output pub identity for LIVE_PASS_URI_4", async () => {
-            await testNZCPPubIdentity(cir, LIVE_PASS_URI_4, true, 355);
+            await testNZCPPubIdentity(cir, LIVE_PASS_URI_4, true, LIVE_TOBESIGNED_MAX);
         });
     }
 });
