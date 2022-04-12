@@ -9,10 +9,10 @@ circuits/nzcp_liveTest.wasm:
 	circom circuits/nzcp_liveTest.circom --r1cs --wasm
 
 circuits/nzcp_example.wasm:
-	circom circuits/nzcp_example.circom --r1cs --wasm --O2
+	circom circuits/nzcp_example.circom --r1cs --wasm --O2 --sym
 
 circuits/nzcp_live.wasm:
-	circom circuits/nzcp_live.circom --r1cs --wasm --O2
+	circom circuits/nzcp_live.circom --r1cs --wasm --O2 --sym
 
 test: node_modules circuits/nzcp.circom
 	yarn exec mocha
