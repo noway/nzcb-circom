@@ -36,6 +36,13 @@ For live passes:
     - Use `.env.example` as a reference.
 - Run `make test`
 
+### Plonk verification key generation
+- `powersOfTau28_hez_final_21.ptau` from https://github.com/iden3/snarkjs#7-prepare-phase-2 was used to generate the Plonk verification key. Blake2b hash is `9aef0573cef4ded9c4a75f148709056bf989f80dad96876aadeb6f1c6d062391f07a394a9e756d16f7eb233198d5b69407cca44594c763ab4a5b67ae73254678`
+- `nzcp_example_final.zkey` b2sum is `0a1979ca92cc7bcd608b0a5eb7d5252959ab17ffa69758dab8f17a44a83e842d61aa5709bde426215beca4296d7f1ddb86aadd66708717f484ce7295c8f8250c`
+- `nzcp_live_final.zkey` b2sum is `edab1c7534d26b495ac0ac779b4fa9f2c75bc89fe9c38ed0a2767b0c390d7bd53594e27a3e106696c6186e82c27e6683f87fbe58d38f1190990971fea37d173f`
+
+The key was generated using the plonk_example and plonk_live tasks in [Makefile](Makefile).
+
 ## Related repos
 - [NZ COVID Badge - Dapp repo](https://github.com/noway/nzcb-dapp)
 - [NZ COVID Badge - Contract repo](https://github.com/noway/nzcb)
