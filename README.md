@@ -43,6 +43,9 @@ For live passes:
 
 The key was generated using the plonk_example and plonk_live tasks in [Makefile](Makefile).
 
+## Tech Spec
+- [NZ COVID Badge - Tech Spec](https://github.com/noway/nzcb/blob/main/TECH_SPEC.md)
+
 ## Related repos
 - [NZ COVID Badge - Dapp repo](https://github.com/noway/nzcb-dapp)
 - [NZ COVID Badge - Contract repo](https://github.com/noway/nzcb)
